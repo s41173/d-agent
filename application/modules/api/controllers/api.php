@@ -15,7 +15,7 @@ class Api extends MX_Controller {
         $this->com = new Components();
         $this->com = $this->com->get_id('login');
 
-        $this->properti = $this->property->get();
+        $this->properti = $this->property->get();   
         
         header('Access-Control-Allow-Origin: *');
         header('Access-Control-Allow-Methods: GET, POST, PATCH, PUT, DELETE, OPTIONS');
@@ -207,6 +207,81 @@ class Api extends MX_Controller {
         ->_display();
         exit;
    }
+   
+   // api  untuk keperluan shipping rate
+    public function get_city(){
+        
+        $this->db->order_by('city', 'asc'); 
+        $result = $this->db->get('shiprate')->result();
+        
+        foreach($result as $res){
+            $output[] = array ("city_id" => $res->cityid, "city" => $res->city);
+        }
+        $response['content'] = $output;
+            $this->output
+            ->set_status_header(200)
+            ->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($response,128))
+            ->_display();
+            exit; 
+    }
+    
+    public function get_district(){
+        
+        $datas = (array)json_decode(file_get_contents('php://input'));
+        $cityid = $datas['city'];
+        
+        if ($cityid){
+            
+            $this->db->where('cityid', $cityid);
+            $this->db->order_by('district', 'asc'); 
+            $result = $this->db->get('shiprate')->result();
+
+            foreach($result as $res){
+                $output[] = array ("city_id" => $res->cityid, "city" => $res->city, "district" => $res->district);
+            }
+            $status = array('status' => true);
+            
+        }else{ $status = array('status' => false); }
+        
+        $response['status'] = $status;
+        $response['content'] = $output;
+
+            $this->output
+            ->set_status_header(200)
+            ->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($response,128))
+            ->_display();
+            exit; 
+    }
+    
+     public function get_shipcost(){
+        
+        $datas = (array)json_decode(file_get_contents('php://input'));
+        $cityid = $datas['city'];
+        $district = $datas['district'];
+        $type = $datas['type'];
+        $kurir = $datas['courier'];
+        
+        if ($cityid != null && $district != null && $type != null && $kurir != null){
+            
+            $this->db->where('courier', $kurir);
+            $this->db->where('city', $cityid);
+            $this->db->where('district', $district);
+            $this->db->where('type', $type);
+            
+            $result = $this->db->get('shiprate')->row();
+            $response['rate'] = intval($result->rate);
+            
+        }else{ $response['rate'] = 0; }
+        
+            $this->output
+            ->set_status_header(200)
+            ->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($response,128))
+            ->_display();
+            exit; 
+    }
     
 
 

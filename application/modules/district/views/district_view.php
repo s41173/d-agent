@@ -8,17 +8,17 @@
 <link href="<?php echo base_url(); ?>js/datatables/dataTables.tableTools.css" rel="stylesheet" type="text/css" />
 <link href="<?php echo base_url(); ?>css/icheck/flat/green.css" rel="stylesheet" type="text/css">
 
-<script src="<?php echo base_url(); ?>js/moduljs/shiprate.js"></script>
+<script src="<?php echo base_url(); ?>js/moduljs/district.js"></script>
 <script src="<?php echo base_url(); ?>js-old/register.js"></script>
 
 <script type="text/javascript">
 
-	var sites_add  = "<?php echo site_url('shiprate/add_process/');?>";
-	var sites_edit = "<?php echo site_url('shiprate/update_process/');?>";
-	var sites_del  = "<?php echo site_url('shiprate/delete/');?>";
-	var sites_get  = "<?php echo site_url('shiprate/update/');?>";
-    var sites  = "<?php echo site_url('shiprate/');?>";
-	var sites_primary  = "<?php echo site_url('shiprate/publish/');?>";
+	var sites_add  = "<?php echo site_url('district/add_process/');?>";
+	var sites_edit = "<?php echo site_url('district/update_process/');?>";
+	var sites_del  = "<?php echo site_url('district/delete/');?>";
+	var sites_get  = "<?php echo site_url('district/update/');?>";
+    var sites  = "<?php echo site_url('district/');?>";
+	var sites_primary  = "<?php echo site_url('district/publish/');?>";
 	var source = "<?php echo $source;?>";
 	
 </script>
@@ -48,7 +48,7 @@
   <div class="form-group">
         <label> City / Region : </label> <br>
         <?php $js = "class='select2_single form-control' id='ccity_search' tabindex='-1' style='width:300px;' "; 
-        echo form_dropdown('ccity', $city_name, isset($default['city']) ? $default['city'] : '', $js); ?>
+        echo form_dropdown('ccity', $city, isset($default['city']) ? $default['city'] : '', $js); ?>
   </div>
                
   <div class="form-group">
@@ -89,6 +89,8 @@
  <div class="btn-group">
  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal"> <i class="fa fa-plus"></i>&nbsp;Add New </button>        
      
+<a href="<?php echo site_url('district'); ?>" class="btn btn-success"> District </a>
+               
    <!-- links -->
    <?php if (!empty($link)){foreach($link as $links){echo $links . '';}} ?>
    <!-- links -->

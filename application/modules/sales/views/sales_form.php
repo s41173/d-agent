@@ -103,7 +103,7 @@
                </div>
                
                <div class="col-md-3 col-sm-12 col-xs-12">
-                   <h2 id="amt"> Total Amount : Rp. <span class="amt"> <?php echo isset($total) ? idr_format($total) : '0'; ?> </span>,- </h2>
+                   <h2 id="amt"> Total : Rp. <span class="amt"> <?php echo isset($total) ? idr_format($total) : '0'; ?> </span>,- </h2>
                </div>
                
            </div>
@@ -112,7 +112,7 @@
 <!-- div untuk customer place  -->
 
 <!-- div alamat penagihan -->
-       <div class="col-md-3 col-sm-12 col-xs-12">
+       <div class="col-md-4 col-sm-12 col-xs-12">
            <div class="col-md-12 col-sm-12 col-xs-12">
               <label class="control-label labelx"> Shipping Address </label>
       <textarea id="tshipadd" style="width:100%;" readonly rows="4"><?php echo isset($default['ship_address']) ? $default['ship_address'] : '' ?></textarea>
@@ -121,7 +121,7 @@
 <!-- div alamat penagihan -->
 
 <!-- div tgl transaksi -->
-    <div class="col-md-2 col-sm-12 col-xs-12 col-md-offset-1">
+    <div class="col-md-3 col-sm-12 col-xs-12">
        
        <div class="col-md-12 col-sm-12 col-xs-12">
           <label class="control-label labelx"> Transaction Date </label>
@@ -129,29 +129,16 @@
            value="<?php echo isset($default['dates']) ? $default['dates'] : '' ?>" /> 
        </div>
         
-        <!-- due date    -->
-       <div class="col-md-12 col-sm-12 col-xs-12">
-          <label class="control-label labelx"> Due Date </label>
-          <input type="text" title="Due Date" class="form-control" id="ds2" name="tduedates" required 
-           value="<?php echo isset($default['due_date']) ? $default['due_date'] : '' ?>" /> 
-       </div>    
-        
     </div>
 <!-- div tgl transaksi -->
         
 <!-- div no transaksi -->
-  <div class="col-md-2 col-sm-12 col-xs-12 col-md-offset-1">
+  <div class="col-md-2 col-sm-12 col-xs-12">
        
       <div class="col-md-12 col-sm-12 col-xs-12">
           <label class="control-label labelx"> Trans Code </label>
           <input type="text" title="Trans Code" class="form-control" readonly name="tdates" value="<?php echo $counter; ?>" /> 
        </div>  
-      
-      <div class="col-md-12 col-sm-12 col-xs-12">
-          <label class="control-label labelx"> Payment Type </label>
-          <?php $js = "class='form-control' id='cpayment' tabindex='-1' style='min-width:150px;' "; 
-	      echo form_dropdown('cpayment', $payment, isset($default['payment']) ? $default['payment'] : '', $js); ?>
-      </div>  
         
   </div>
 <!-- div no transaksi -->
@@ -254,7 +241,7 @@
                 
                 $res = explode('|',$attr);
                 if ($type == 'dimension'){ return @$res[0].' x '.@$res[1]; }
-                else{ return floatval(@$res[9]); }
+                else{ return floatval(@$res[9]/100); }
             }
             
             if ($items)
@@ -296,30 +283,16 @@
         <legend> Shipping </legend>
                         
         <div class="col-md-12 col-sm-12 col-xs-12">
-          <label class="control-label labelx"> Destination </label>
+          <label class="control-label labelx"> Destination / District </label>
           <?php $js = "class='select2_single form-control' id='ccity_ongkir' tabindex='-1' style='min-width:150px;' "; 
 	      echo form_dropdown('ccity', $city, isset($default['dest']) ? $default['dest'] : '', $js); ?>
+            
+         <div id="districtbox" style="border:0px solid red; margin:10px 0 5px 0;"></div>    
           
           <input type="checkbox" id="ckship"> <small style="font-weight:bold;"> * Use as ship address </small>
 <textarea rows="3" name="tshipaddkurir" required id="tshipaddkurir" style="width:100%; margin-top:5px; margin-bottom:5px;" placeholder="Destination Description"><?php echo isset($default['dest_desc']) ? $default['dest_desc'] : '' ?></textarea>
         </div> 
-            
-        <div class="col-md-4 col-sm-12 col-xs-12">
-          <label class="control-label labelx"> Courier </label>
-          <select class="form-control" name="ccourier" id="ccourier"> 
-<option value="pos"<?php echo set_select('ccourier', 'pos', isset($default['courier']) && $default['courier'] == 'pos' ? TRUE : FALSE); ?>> POS </option>
-<option value="jne"<?php echo set_select('ccourier', 'jne', isset($default['courier']) && $default['courier'] == 'jne' ? TRUE : FALSE); ?>> JNE </option>
-<option value="tiki"<?php echo set_select('ccourier', 'tiki', isset($default['courier']) && $default['courier'] == 'tiki' ? TRUE : FALSE); ?>> TIKI </option>
-<option value="rpx"<?php echo set_select('ccourier', 'rpx', isset($default['courier']) && $default['courier'] == 'rpx' ? TRUE : FALSE); ?>> RPX </option>
-<option value="esl"<?php echo set_select('ccourier', 'esl', isset($default['courier']) && $default['courier'] == 'esl' ? TRUE : FALSE); ?>> ESL </option>
-<option value="pcp"<?php echo set_select('ccourier', 'pcp', isset($default['courier']) && $default['courier'] == 'pcp' ? TRUE : FALSE); ?>> PCP </option>
-<option value="pandu"<?php echo set_select('ccourier', 'pandu', isset($default['courier']) && $default['courier'] == 'pandu' ? TRUE : FALSE); ?>> Pandu </option>
-<option value="wahana"<?php echo set_select('ccourier', 'wahana', isset($default['courier']) && $default['courier'] == 'wahana' ? TRUE : FALSE); ?>> Wahana </option>
-<option value="sicepat"<?php echo set_select('ccourier', 'sicepat', isset($default['courier']) && $default['courier'] == 'sicepat' ? TRUE : FALSE); ?>> SiCepat </option>
-<option value="jnt"<?php echo set_select('ccourier', 'jnt', isset($default['courier']) && $default['courier'] == 'jnt' ? TRUE : FALSE); ?>> JNT </option>
-<option value="indah"<?php echo set_select('ccourier', 'indah', isset($default['courier']) && $default['courier'] == 'indah' ? TRUE : FALSE); ?>> Indah </option>
-          </select>
-        </div>    
+              
         
         <div class="col-md-4 col-sm-12 col-xs-12">
           <label class="control-label labelx"> Package </label>

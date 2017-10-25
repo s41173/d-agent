@@ -8,17 +8,16 @@
 <link href="<?php echo base_url(); ?>js/datatables/dataTables.tableTools.css" rel="stylesheet" type="text/css" />
 <link href="<?php echo base_url(); ?>css/icheck/flat/green.css" rel="stylesheet" type="text/css">
 
-<script src="<?php echo base_url(); ?>js/moduljs/shiprate.js"></script>
+<script src="<?php echo base_url(); ?>js/moduljs/account.js"></script>
 <script src="<?php echo base_url(); ?>js-old/register.js"></script>
 
 <script type="text/javascript">
 
-	var sites_add  = "<?php echo site_url('shiprate/add_process/');?>";
-	var sites_edit = "<?php echo site_url('shiprate/update_process/');?>";
-	var sites_del  = "<?php echo site_url('shiprate/delete/');?>";
-	var sites_get  = "<?php echo site_url('shiprate/update/');?>";
-    var sites  = "<?php echo site_url('shiprate/');?>";
-	var sites_primary  = "<?php echo site_url('shiprate/publish/');?>";
+	var sites_add  = "<?php echo site_url('account/add_process/');?>";
+	var sites_edit = "<?php echo site_url('account/update_process/');?>";
+	var sites_del  = "<?php echo site_url('account/delete/');?>";
+	var sites_get  = "<?php echo site_url('account/update/');?>";
+	var sites_primary  = "<?php echo site_url('account/publish/');?>";
 	var source = "<?php echo $source;?>";
 	
 </script>
@@ -40,39 +39,11 @@
               <!-- xtitle -->
                 
                 <div class="x_content">
-                    
-          <!-- searching form -->
-           
-           <form id="searchform" class="form-inline">
-               
-  <div class="form-group">
-        <label> City / Region : </label> <br>
-        <?php $js = "class='select2_single form-control' id='ccity_search' tabindex='-1' style='width:300px;' "; 
-        echo form_dropdown('ccity', $city_name, isset($default['city']) ? $default['city'] : '', $js); ?>
-  </div>
-               
-  <div class="form-group">
-      <label> Courrier : </label> <br>
-      <?php $js = "class='select2_single form-control' id='ccourrier_search' tabindex='-1' style='width:170px;' "; 
-	   echo form_dropdown('ccourrier', $courrier, isset($default['ccourrier']) ? $default['ccourrier'] : '', $js); ?>
-  </div>              
-               
-              <div class="form-group btn-group"> <br>
-               <button type="submit" class="btn btn-primary button_inline"> Filter </button>
-               <button type="reset" onClick="" class="btn btn-success button_inline"> Clear </button>
-               <button type="button" onClick="load_data(null);" class="btn btn-danger button_inline"> Reset </button>
-              </div>
-          </form> <br>
-           
-           <!-- searching form -->                
                   
           <form class="form-inline" id="cekallform" method="post" action="<?php echo ! empty($form_action_del) ? $form_action_del : ''; ?>">
-                  
-                  <div class="table-responsive">
                   <!-- table -->
                   <?php echo ! empty($table) ? $table : ''; ?>
                   <!-- table -->
-                  </div>
                   
                   <!-- Check All Function -->
                   <div class="form-group" id="chkbox">
@@ -86,32 +57,32 @@
              </div>
 
                <!-- Trigger the modal with a button --> 
- <div class="btn-group">
- <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal"> <i class="fa fa-plus"></i>&nbsp;Add New </button>        
-     
-   <!-- links -->
-   <?php if (!empty($link)){foreach($link as $links){echo $links . '';}} ?>
-   <!-- links -->
- </div>                           
+ <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal"> <i class="fa fa-plus"></i>&nbsp;Add New </button>
+               <!--<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal3"> Report  </button>-->
+               
+               <!-- links -->
+	           <?php if (!empty($link)){foreach($link as $links){echo $links . '';}} ?>
+               <!-- links -->
+                             
             </div>
           </div>
       
     
       <!-- Modal - Add Form -->
-      <div class="modal fade" onclick="" id="myModal" role="dialog">
-         <?php  $this->load->view('shiprate_form'); ?>      
+      <div class="modal fade" id="myModal" role="dialog">
+         <?php $this->load->view('account_form'); ?>      
       </div>
       <!-- Modal - Add Form -->
       
       <!-- Modal Edit Form -->
       <div class="modal fade" id="myModal2" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-	     <?php $this->load->view('shiprate_update'); ?> 
+	     <?php //$this->load->view('manufacture_update'); ?> 
       </div>
       <!-- Modal Edit Form -->
       
       <!-- Modal - Report Form -->
       <div class="modal fade" id="myModal3" role="dialog">
-         <?php //$this->load->view('account_import'); ?>    
+         <?php /*$this->load->view('category_report');*/ ?>    
       </div>
       <!-- Modal - Report Form -->
       

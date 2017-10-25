@@ -27,9 +27,10 @@ class Sales extends MX_Controller
         $this->category = new Categoryproduct_lib();
         $this->agent = new Agent_lib();
         $this->pmodel = new Model_lib();
+        $this->shiprate = new Shiprate_lib();
     }
 
-    private $properti, $modul, $title, $sales, $wt ,$shipping, $bank, $pmodel;
+    private $properti, $modul, $title, $sales, $wt ,$shipping, $bank, $pmodel, $shiprate;
     private $role, $currency, $customer, $payment, $city, $product ,$category,$agent;
     
     function index()
@@ -83,31 +84,14 @@ class Sales extends MX_Controller
     
     function add_item_json()
     {  
-        $datax = (array)json_decode(file_get_contents('php://input')); 
-        
-//
-//        $orderid = $datax['orderid'];
-//        $agent = $datax['agent'];
-//        $cust  = $datax['cust']; 
-        
-//        for($i=1; $i<3; $i++){
-//            
-//            $output[] = array ("product_id" => $i, "qty" => 3, 'tax' => 5000, 'price' => 2500, 'width' => 3, 'height' => 2,
-//                              'fixed_top' => 7, 'fixed_bot' => 8, 'color' => 2, 'glasstype' => 'DOUBLE', 'glass_id' => 34, 'frame' => 'sayap');
-//        }
-//        
-//        $status = array('hasil' => 'true', 'error' => 'ini pesan error');
-//        
-//        $response['content'] = $output;
-//        $response['status'] = $status;
-        
+        $datax = (array)json_decode(file_get_contents('php://input'));         
  
         $content = $datax['content'];
         $orderid = $datax['status']->orderid;
         $result = true;
         $error = null;
         
-        if ($this->cek_orderid($orderid) == TRUE && $this->valid_confirm($orderid,'code') == TRUE)
+        if ($this->cek_orderid($orderid) == TRUE && $this->valid_confirm($orderid,'code') == TRUE && $this->valid_shipping_json($datax['shipping']) == TRUE)
         {
 
           for($i=0; $i<count($content); $i++){
@@ -122,7 +106,7 @@ class Sales extends MX_Controller
                                 
                 $model = $this->product->get_detail_based_id($content[$i]->product_id);
                 $vol = intval($content[$i]->width*100)*intval($content[$i]->height*100)*intval($this->pmodel->get_height($model->model)/10);
-                $weight = floatval($vol/6000);
+                $weight = intval($vol/6000);
                 
                 $attr = $content[$i]->width.'|'.$content[$i]->height.'|'.$content[$i]->fixed_top.'|'.$content[$i]->fixed_bot.'|'.$content[$i]->color.'|'.
                         $content[$i]->glasstype.'|'.$content[$i]->glass_id.'|'.$content[$i]->frame.'|'.$weight.'|'.$vol;
@@ -136,6 +120,9 @@ class Sales extends MX_Controller
               }else { $result = false; $error = 'Invalid JSON Format'; break; }
           }
           
+          // add shipping
+          if ($result == true){ $this->shipping_json($datax); }
+          
         }
         else{ $result = false; $error = 'Invalid Orderid'; }
         
@@ -148,6 +135,41 @@ class Sales extends MX_Controller
             ->set_output(json_encode($response,128))
             ->_display();
             exit;  
+    }
+    
+    function valid_shipping_json($shipping){
+        
+        if (isset($shipping->courier) && isset($shipping->type) && isset($shipping->package) && isset($shipping->dest) && isset($shipping->district) && 
+            isset($shipping->dest_desc)){ return TRUE; }else{ return FALSE; }
+        
+    }
+    
+    private function shipping_json($datax){
+        
+        $result = TRUE;
+        $error = null;
+        
+        $orderid = $datax['status']->orderid;
+        $sid = $this->Sales_model->get_id_based_order($orderid);
+        $shipping = $datax['shipping'];
+        
+        if ($this->valid_shipping_json($shipping) == TRUE){
+           
+            $rate = $this->shiprate->rate($shipping->dest, $shipping->district, $shipping->type, $shipping->courier);
+            $weight = $this->sitem->total_vol($sid);
+            
+            $param = array('sales_id' => $sid, 'shipdate' => null,
+                           'courier' => $shipping->courier, 'dest' => $shipping->dest,
+                           'district' => $shipping->district,
+                           'dest_desc' => $shipping->dest_desc, 'package' => $shipping->package,
+                           'weight' => $weight, 'rate' => $rate,
+                           'amount' => intval($weight*$rate));
+            
+            $this->shipping->create($sid, $param);
+            $this->update_trans($sid);
+            
+        }else { $result = FALSE; $error = "Invalid JSON Format"; }
+        return $result; 
     }
     
     function json_process()
@@ -183,16 +205,19 @@ class Sales extends MX_Controller
     
 //     ============== ajax ===========================
     
-    function ongkir($ori=null,$dest=null,$courier=null,$jenis=null)
+    function get_district($city=null)
     {
-        if (!$jenis){ echo @$this->city->get_ongkir_combo($ori, $dest, $courier); }
-        else { echo @idr_format($jenis); }  
+       echo $this->shiprate->combo_district($city); 
     }
     
-    function ongkir_nilai($ori,$dest,$courier,$jenis=null)
+    function ongkir_nilai()
     {
-        if (!$jenis){ echo 0; }
-        else { echo @idr_format(floatval($jenis)); }  
+      $city = $this->input->post('city'); 
+      $district = $this->input->post('district'); 
+      $weight = $this->input->post('weight'); 
+      
+      $rate = $this->shiprate->rate($city, $district); 
+      echo $rate.'|'.idr_format($rate).'|'. idr_format(floatval($rate*$weight));
     }
     
     function get_customer($id)
@@ -222,12 +247,12 @@ class Sales extends MX_Controller
                 
          foreach($result as $res)
 	 {
-           $total = intval($res->amount+$res->cost);  
-           if ($res->paid_date){ $status = 'S'; }else{ $status = 'C'; } 
+           $total = intval($res->amount);  
+           $status = 'C';
            if ($this->shipping->cek_shiping_based_sales($res->id) == true){ $ship = 'Shipped'; }else{ $ship = '-'; } // shipping status
            
 	   $output[] = array ($res->id, $res->code, tglin($res->dates), $this->customer->get_name($res->cust_id), idr_format($total),
-                              idr_format($res->shipping), $status, $ship, $res->confirmation, $this->agent->get_name($res->agent_id)
+                              idr_format($res->shipping), $status, $ship, $res->approved, $this->agent->get_name($res->agent_id)
                              );
 	 } 
          
@@ -237,6 +262,7 @@ class Sales extends MX_Controller
          ->set_output(json_encode($output))
          ->_display();
          exit;  
+         
         }
     }
 
@@ -396,13 +422,10 @@ class Sales extends MX_Controller
 	// Form validation
         $this->form_validation->set_rules('ccustomer', 'Customer', 'required');
         $this->form_validation->set_rules('tdates', 'Transaction Date', 'required');
-        $this->form_validation->set_rules('tduedates', 'Transaction Due Date', 'required');
-        $this->form_validation->set_rules('cpayment', 'Payment Type', 'required');
 
         if ($this->form_validation->run($this) == TRUE)
         {
             $sales = array('cust_id' => $this->input->post('ccustomer'), 'dates' => date("Y-m-d H:i:s"),
-                           'due_date' => $this->input->post('tduedates'), 'payment_id' => $this->input->post('cpayment'), 
                            'created' => date('Y-m-d H:i:s'));
 
             $this->Sales_model->add($sales);
@@ -479,17 +502,14 @@ class Sales extends MX_Controller
          // Form validation
         $this->form_validation->set_rules('ccity', 'City', 'required');
         $this->form_validation->set_rules('tshipaddkurir', 'Shipping Address', 'required');
-        $this->form_validation->set_rules('ccourier', 'Courier Service', 'required');
-        $this->form_validation->set_rules('cpackage', 'Package Type', '');
         $this->form_validation->set_rules('tweight', 'Weight', 'required|numeric');
 
             if ($this->form_validation->run($this) == TRUE && $this->valid_confirm($sid) == TRUE)
             {
-                $city = explode('|', $this->input->post('ccity'));
-                $package = explode('|', $this->input->post('cpackage'));
                 $param = array('sales_id' => $sid, 'shipdate' => null,
-                               'courier' => $this->input->post('ccourier'), 'dest' => $city[1], 'dest_id' => $city[0],
-                               'dest_desc' => $this->input->post('tshipaddkurir'), 'package' => $package[0],
+                               'courier' => 'ESL', 'dest' => $this->input->post('ccity'),
+                               'district' => $this->input->post('cdistrict'),
+                               'dest_desc' => $this->input->post('tshipaddkurir'), 'package' => 'RDX',
                                'weight' => $this->input->post('tweight'), 'rate' => $this->input->post('rate'),
                                'amount' => intval($this->input->post('rate')*$this->input->post('tweight')));
                 
@@ -519,7 +539,7 @@ class Sales extends MX_Controller
         $data['payment'] = $this->payment->combo();
         $data['source'] = site_url($this->title.'/getdatatable');
         $data['graph'] = site_url()."/sales/chart/";
-        $data['city'] = $this->city->combo_city_combine();
+        $data['city'] = $this->shiprate->combo_city_id();
         $data['product'] = $this->product->combo();
         
         $sales = $this->Sales_model->get_by_id($param)->row();
@@ -530,8 +550,6 @@ class Sales extends MX_Controller
         $data['default']['email'] = $customer->email;
         $data['default']['ship_address'] = $customer->shipping_address;
         $data['default']['dates'] = $sales->dates;
-        $data['default']['due_date'] = $sales->due_date;
-        $data['default']['payment'] = $sales->payment_id;
         $data['total'] = $sales->total;
         $data['shipping'] = $sales->shipping;
         $data['tot_amt'] = intval($sales->amount+$sales->shipping);
@@ -547,14 +565,10 @@ class Sales extends MX_Controller
         $shipping = $this->shipping->get_detail_based_sales($param);
         if ($shipping){
            
-           $dst = array($shipping->dest_id,$shipping->dest); 
-           $pck = array($shipping->package, $shipping->rate);
-           
-           $data['default']['dest'] = implode('|', $dst);
-           $data['default']['dest_desc'] = $shipping->dest_desc; 
-           $data['package'] = implode('|', $pck);
-           $data['default']['courier'] = $shipping->courier;
-           $data['default']['package'] = $shipping->package;
+           $data['default']['dest'] = $shipping->dest;
+           $data['default']['district'] = $shipping->district;
+           $data['default']['dest_desc'] = $shipping->dest_desc.' - '.$shipping->district; 
+           $data['default']['package'] = idr_format($shipping->rate);
            $data['default']['rate'] = $shipping->rate;
         }
         

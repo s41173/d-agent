@@ -91,13 +91,12 @@ $(document).ready(function (e) {
 				
 				res = result.split("|");
 
-				// 2|ESL|Medan|Medan Selayang|weight|5000
-
+				// 2|ESL|1275|1275130|weight|9500
 				$("#tid_update").val(res[0]);
 				$("#cccourrier_update").val(res[1]);
-				$('#ccity_update').val(res[6]+"|"+res[2]).change();
+				$('#ccity_update').val(res[2]).change();
 				$('#cdistrict_update').val(res[3]).change();
-				$('#cdistrict_update_name').val(res[3]);
+				$('#cdistrict_update_name').val(res[6]);
 				$('#ctype_update').val(res[4]).change();
 				$('#trate_update').val(res[5]);
 				$("#dbox_update").hide();

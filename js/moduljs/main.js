@@ -10,11 +10,14 @@ $(document).ready(function (e) {
     })
 	
     	// ajax loading
-	$('#loading').ajaxStart(function(){
-		$(this).fadeIn();
-	}).ajaxStop(function(){
-		$(this).fadeOut();
-	});
+
+	$(document).ajaxStart(function(){
+        $(".loader").css("display", "block");
+    });
+    $(document).ajaxComplete(function(){
+        $(".loader").css("display", "none");
+    });
+
    
     // function general
 	$("#error,#success,#warning").hide();

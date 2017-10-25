@@ -13,7 +13,7 @@ class Shiprate_model extends Custom_Model
         $this->tableName = 'shiprate';
     }
     
-    protected $field = array('id', 'courier', 'city', 'cityid', 'district', 'type', 'rate', 'created', 'updated', 'deleted');
+    protected $field = array('id', 'courier', 'city', 'district', 'type', 'rate', 'created', 'updated', 'deleted');
     protected $com;
             
     function count_all_num_rows()

@@ -13,10 +13,8 @@ class Sales_model extends Custom_Model
         $this->tableName = 'sales';
     }
     
-    protected $field = array('id', 'code', 'dates', 'agent_id', 'cust_id', 'amount', 'tax', 'cost', 'total', 'shipping',
-                             'payment_id', 'bank_id', 'paid_date', 'paid_contact', 'due_date', 
-                             'cc_no', 'cc_name', 'cc_bank', 'sender_name', 'sender_acc', 'sender_bank', 'sender_amount', 
-                             'confirmation', 'approved', 'log', 'created', 'updated', 'deleted');
+    protected $field = array('id', 'code', 'dates', 'agent_id', 'cust_id', 'amount', 'tax', 'cost', 'total', 'shipping',                            
+                             'approved', 'log', 'created', 'updated', 'deleted');
     protected $com;
     
     function get_last($limit, $offset=null)
@@ -69,7 +67,7 @@ class Sales_model extends Custom_Model
     {
        if ($type == 'id'){ $this->db->where('id', $sid); }else{ $this->db->where('code', $sid); }
        $query = $this->db->get($this->tableName)->row();
-       if ($query->confirmation == 1){ return FALSE; }else{ return TRUE; }
+       if ($query->approved == 1){ return FALSE; }else{ return TRUE; }
     }
     
     function valid_orderid($orderid)

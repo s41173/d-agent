@@ -209,12 +209,11 @@ $(document).ready(function (e) {
 	});
 
 		// fungsi ajax city ongkir
-	$(document).on('change','#ccity_ongkir,#ccourier',function(e)
+	$(document).on('change','#ccity_ongkir',function(e)
 	{	
 		e.preventDefault();
-		var value = $("#ccity_ongkir").val().split('|');
-		var kurir = $("#ccourier").val();
-		var url = sites+'/ongkir/278/'+value[0]+'/'+kurir;
+		var value = $(this).val();
+		var url = sites+'/get_district/'+value;
 
 		if (value){ 
 		    // batas
@@ -224,13 +223,13 @@ $(document).ready(function (e) {
 	    	    cache: false,
 				headers: { "cache-control": "no-cache" },
 				success: function(result) {
-			    $("#tpackage").hide();		
-				$("#package_box").html(result);
+				  $("#districtbox").show();	
+				  $("#districtbox").html(result);
 				}
 			})
 			return false;
 
-		}else { swal('Error Load Data...!', "", "error"); }
+		}else {  $("#districtbox").hide(); swal('Error Load Data...!', "", "error"); }
 
 	});
 
@@ -268,33 +267,32 @@ $(document).ready(function (e) {
 		return false; }else { $("#tprice").val('0');  }
 	});
 
-	$(document).on('change','#cpackage',function(e)
+	$(document).on('change','#cdistrict',function(e)
 	{	
 		e.preventDefault();
 
-		var packages = $("#cpackage").val();
+		var city = $("#ccity_ongkir").val();
+		var district = $(this).val();
 		var weight = $("#tweight").val();
 
-		var res = packages.split('|');
-		var nilai = parseInt(res[1]*weight);
-		var url = sites+'/ongkir_nilai/278/110/pos/'+nilai;
-
-		// var value = $("#ccity_ongkir").val().split('|');
-		// var kurir = $("#ccourier").val();
-		// var url = sites+'/ongkir_nilai/278/'+value[0]+'/'+kurir;
-
+		var url = sites+'/ongkir_nilai/';
+		
 	    // batas
 		$.ajax({
 			type: 'POST',
 			url: url,
+		    data: "city="+ city + "&district=" + district + "&weight=" + weight,
     	    cache: false,
 			headers: { "cache-control": "no-cache" },
 			success: function(result) {
-			$("#shipn").html(result);
-			$("#rate").val(res[1]);
+				res = result.split('|');
+		     	$("#shipn").html(res[2]);
+				$("#tpackage").val(res[1]);
+				$("#rate").val(res[0]);
 			}
 		})
 		return false;
+
 	});
 
 	$('#searchform').submit(function() {

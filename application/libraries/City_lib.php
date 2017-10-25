@@ -47,6 +47,33 @@ class City_lib extends Main_model {
         else {  return $response; }
     }
     
+    private function get_district($param=null)
+    {
+
+        $curl = curl_init();
+
+          curl_setopt_array($curl, array(
+          CURLOPT_URL => "https://pro.rajaongkir.com/api/subdistrict?city=".$param,
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_ENCODING => "",
+          CURLOPT_MAXREDIRS => 10,
+          CURLOPT_TIMEOUT => 30,
+          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+          CURLOPT_CUSTOMREQUEST => "GET",
+          CURLOPT_HTTPHEADER => array(
+            "key: eb7f7529d68f6a2933b5a042ffeeac9d"
+          ),
+        ));
+
+        $response = curl_exec($curl);
+        $err = curl_error($curl);
+
+        curl_close($curl);
+
+        if ($err) {return "cURL Error #:" . $err; $this->error->create(0, $err); } 
+        else {  return $response; }
+    }
+    
     function combo_province()
     {
         $json = $this->get_city();
@@ -65,6 +92,28 @@ class City_lib extends Main_model {
         foreach ($datax['rajaongkir']['results'] as $row)
         {$data[$row['city_id']] = $row['city_name'];}
         return $data;
+    }
+    
+    function combo_district($param=null)
+    {
+        $json = $this->get_district($param);
+        $datax = json_decode($json, true);
+        $data['options'][""] = " -- Pilih Kecamatan -- ";
+        foreach ($datax['rajaongkir']['results'] as $row)
+        {$data[$row['subdistrict_id']] = $row['subdistrict_name'];}
+        return $data;
+    }
+    
+    function combo_district_ajax($param=null,$type=null)
+    {
+        if ($type){ $name = 'cdistrictupdate'; }else{ $name = 'cdistrict'; }  
+        $json = $this->get_district($param);
+        $datax = json_decode($json, true);
+        $data['options'][""] = " -- Pilih Kecamatan -- ";
+        foreach ($datax['rajaongkir']['results'] as $row){$data[$row['subdistrict_name']] = $row['subdistrict_name'];}
+        
+        $js = "class='select2_single form-control' id='cdistrict' tabindex='-1' style='min-width:100px;' "; 
+	return form_dropdown($name, $data, isset($default['district']) ? $default['district'] : '', $js);
     }
     
      function combo_city_combine()
@@ -88,6 +137,7 @@ class City_lib extends Main_model {
         return $data;
     }
     
+   
     function combo_city_name()
     {
         $json = $this->get_city();
@@ -172,7 +222,7 @@ class City_lib extends Main_model {
       $val = $this->db->get($this->tableName)->row();   
       if ($val){ return $val->nama; }else{ return null; }
     }
-    
+        
     function import()
     {
         $data['title'] = $this->properti['name'].' | Administrator  '.ucwords($this->modul['title']);
