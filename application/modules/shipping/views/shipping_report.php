@@ -214,6 +214,12 @@
                   return tglin($result->dates);
               }
               
+              function dest($val){
+                  
+                  $res = new Shiprate_lib();
+                  return $res->get_city_name($val);
+              }
+              
               function pstatus($val){ if ($val == 0){ return 'N'; }else{ return 'Y'; } }
 			  		  
 		      $i=1; 
@@ -232,7 +238,7 @@
                        <td class=\"strongs\">".$res->rate."</td>
                        <td class=\"strongs\">".$res->weight."</td>
                        <td class=\"strongs\">".$res->awb."</td>
-                       <td class=\"strongs\">".$res->dest."</td>
+                       <td class=\"strongs\">".dest($res->dest)."</td>
                        <td class=\"strongs\">".$res->dest_desc."</td>
                        <td class=\"strongs\">".$res->amount."</td>
                        <td class=\"strongs\">".tglin($res->paid_date)."</td>

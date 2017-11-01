@@ -27,39 +27,6 @@ action="<?php echo $form_action_report; ?>" enctype="multipart/form-data">
     </div>
     
     <div class="form-group">
-        <label class="control-label col-md-3 col-sm-3 col-xs-12"> Paid </label>
-        <div class="col-md-3 col-sm-12 col-xs-12">     
-<select name="cpaid" class="form-control">
-    <option value=""> -- </option>
-    <option value="1"> Paid </option>
-    <option value="0"> Unpaid </option>
-</select>
-        </div>
-    </div>
-    
-    <div class="form-group">
-        <label class="control-label col-md-3 col-sm-3 col-xs-12"> Shipped </label>
-        <div class="col-md-3 col-sm-12 col-xs-12">     
-<select name="cshipped" class="form-control">
-    <option value=""> -- </option>
-    <option value="1"> Shipped </option>
-    <option value="0"> Unshipped </option>
-</select>
-        </div>
-    </div>
-    
-    <div class="form-group">
-        <label class="control-label col-md-3 col-sm-3 col-xs-12"> Confirmation </label>
-        <div class="col-md-3 col-sm-9 col-xs-12">     
-<select name="cconfirm" class="form-control">
-    <option value=""> -- </option>
-    <option value="1"> Confirmed </option>
-    <option value="0"> Unconfirmed </option>
-</select>
-        </div>
-    </div>
-    
-    <div class="form-group">
         <label class="control-label col-md-3 col-sm-3 col-xs-12"> Type </label>
         <div class="col-md-3 col-sm-9 col-xs-12">     
 			<select name="ctype" class="form-control">
@@ -71,7 +38,7 @@ action="<?php echo $form_action_report; ?>" enctype="multipart/form-data">
 
       <div class="ln_solid"></div>
       <div class="form-group">
-          <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
+          <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3 btn-group">
           <button type="submit" class="btn btn-primary">Post</button>
           <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
           </div>

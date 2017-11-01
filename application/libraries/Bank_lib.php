@@ -14,10 +14,19 @@ class Bank_lib extends Main_model {
                              'created', 'updated', 'deleted');
        
     
-    function get_details($id)
+    function get(){
+        
+        $this->db->select($this->field);
+        $this->db->where('deleted', NULL);
+        $this->db->order_by('id', 'asc');
+        return $this->db->get($this->tableName)->result();
+    }
+    
+    function get_details($id,$type=null)
     {
        $this->db->where('id', $id);
-       return $this->db->get($this->tableName); 
+       if (!$type){ return $this->db->get($this->tableName);  }
+       else { $res = $this->db->get($this->tableName)->row(); return $res->$type;  }
     }
     
     function combo()
@@ -26,7 +35,7 @@ class Bank_lib extends Main_model {
         $this->db->where('deleted', NULL);
         $this->db->order_by('acc_name', 'asc');
         $val = $this->db->get($this->tableName)->result();
-        foreach($val as $row){ $data['options'][$row->id] = ucfirst($row->acc_no.' : '.$row->acc_bank); }
+        foreach($val as $row){ $data['options'][$row->id] = ucfirst($row->acc_no.' : '.$row->acc_name); }
         return $data;
     }
 

@@ -8,9 +8,7 @@ class Sales_lib extends Custom_Model {
         $this->tableName = 'sales';
     }
 
-    protected $field = array('id', 'dates', 'cust_id', 'amount', 'tax', 'cost', 'total', 'shipping',
-                             'payment_id', 'bank_id', 'paid_date', 'paid_contact', 'due_date', 
-                             'cc_no', 'cc_name', 'cc_bank', 'sender_name', 'sender_acc', 'sender_bank', 'sender_amount', 'confirmation',
+    protected $field = array('id', 'code', 'dates', 'agent_id', 'cust_id', 'amount', 'tax', 'cost', 'total', 'shipping',
                              'approved', 'log', 'created', 'updated', 'deleted');
 
     function cek_relation($id,$type)
@@ -18,6 +16,13 @@ class Sales_lib extends Custom_Model {
        $this->db->where($type, $id);
        $query = $this->db->get('product')->num_rows();
        if ($query > 0) { return FALSE; } else { return TRUE; }
+    }
+    
+    function get_id_based_order($orderid){
+        
+        $this->db->where('code', $orderid);
+        $query = $this->db->get($this->tableName)->row();
+        if ($query){ return $query->id; }else{ return FALSE; }
     }
     
     function get_detail_sales($id=null)
@@ -47,7 +52,6 @@ class Sales_lib extends Custom_Model {
         $this->db->select_sum('amount');
         $this->db->select_sum('price');
         $this->db->select_sum('qty');
-        $this->db->select_sum('weight');
         $this->db->where('sales_id', $pid);
         return $this->db->get('sales_item')->row_array();
     }

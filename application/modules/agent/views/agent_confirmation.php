@@ -57,6 +57,12 @@
                         <td valign="top"><span style="margin-left:10px;margin-right:10px">:</span></td>
                         <td valign="top"><span> <?php echo $email; ?> </span> </td>
                     </tr>
+                    
+                    <tr>
+                        <td valign="top"> Password </td>
+                        <td valign="top"><span style="margin-left:10px;margin-right:10px">:</span></td>
+                        <td valign="top"><span> <?php echo $password; ?> </span> </td>
+                    </tr>
 
                     <tr>
                         <td valign="top">Alamat </td>

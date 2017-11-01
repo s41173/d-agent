@@ -43,6 +43,30 @@ $(document).ready(function (e) {
 	// batas dtatable
 
 	// fungsi jquery konfirmasi pembayaran
+	$(document).on('click','.text-payment',function(e)
+	{	
+		e.preventDefault();
+		var element = $(this);
+		var del_id = element.attr("id");
+		var url = sites_payment_confirmation +"/"+ del_id;
+		$(".error").fadeOut();
+		
+		$("#myModal4").modal('show');
+		// batas
+		$.ajax({
+			type: 'POST',
+			url: url,
+    	    cache: false,
+			headers: { "cache-control": "no-cache" },
+			success: function(result) {
+				res = result.split("|");
+			    $('#dtime2').val(res[1]);
+			}
+		})
+		return false;	
+	});
+
+	// fungsi jquery konfirmasi pembayaran
 	$(document).on('click','.text-confirmation',function(e)
 	{	
 		e.preventDefault();
@@ -66,7 +90,8 @@ $(document).ready(function (e) {
 				console.log(res[2]);
 
 			    $('#cstts').val(res[1]);
-			    $('#dtime1').val(res[2]);
+				$('#dtime1').val(res[2]);
+				$('#tairway').val(res[3]);
 			}
 		})
 		return false;	
@@ -90,16 +115,16 @@ $(document).ready(function (e) {
 			headers: { "cache-control": "no-cache" },
 			success: function(result) {
 				
-				// 4|7|19-02-2017|jne|REG|AWB2384679|Jakarta Timur|JL.Bunga Cempaka X No.22
 				res = result.split("|");
 
 				$('#tid_update').val(res[0]);
-			    $('#tsales').val("SO-0"+res[1]);
+			    $('#tsales').val(res[8]);
 			    $('#tsales_date').val(res[2]);
 			    $('#tcourier').val(res[3]);
 			    $('#tpackage').val(res[4]);
 			    $('#tdesc').val(res[6]);
-			    $('#taddress').val(res[7]);
+				$('#taddress').val(res[7]);
+				$('#tdistrict').val(res[9]);
 			}
 		})
 		return false;	
@@ -146,8 +171,6 @@ $(document).ready(function (e) {
 	    	} 	        
 	   });
 
-		// window.location.href = url;
-		// window.open(url, "Invoice SO-0"+del_id, "toolbar=yes,scrollbars=yes,resizable=yes,top=200,left=600,width=800,height=600");
 		
 	});
 
@@ -163,40 +186,6 @@ $(document).ready(function (e) {
         // alert("My favourite sports are: " + favorite.join(", "));
         $("#myModal4").modal('show');
 	});
-
-	// ajax form non upload data
-	$("#shipping_confirm").on('submit',(function(e) {
-		
-		var dates = $("#dtime2").val();
-		var confirm = $("#cpaid_stts").val();
-
-		e.preventDefault();
-		$.ajax({
-		    type: "POST",
-        	url: sites_payment_confirmation,
-            data: "dates="+ dates + "&confirm=" + confirm + "&nilai=" + favorite,
-			success: function(data)
-		    {
-				res = data.split("|");
-				
-				if(res[0]=='true')
-				{
-					// invalid file format.
-					error_mess(1,res[1]);
-				}
-				else if(res[0] == 'warning'){ error_mess(2,res[1]); }
-				else if(res[0] == 'error'){ error_mess(3,res[1]); }
-		    },
-		  	error: function(e) 
-	    	{
-				//$("#error").html(e).fadeIn();
-				error_mess(3,e);
-				console.log(e.responseText);	
-	    	} 	        
-	   });
-	     
-	}));
-	
 	
 	// publish status
 	$(document).on('click','.primary_status',function(e)
@@ -446,6 +435,7 @@ $(document).ready(function (e) {
 '<a href="" class="'+stts+' btn-xs primary_status" id="' +s[i][0]+ '" title="Confirmation Status"> <i class="fa fa-power-off"> </i> </a> '+
 '<a href="" class="btn btn-success btn-xs text-print" id="' +s[i][0]+ '" title="Invoice Status"> <i class="fa fa-print"> </i> </a> '+
 '<a href="" class="btn btn-default btn-xs text-confirmation" id="' +s[i][0]+ '" title="Shipping Confirmation"> <i class="fa fa-truck"> </i> </a> '+
+'<a href="" class="btn btn-default btn-xs text-payment" id="' +s[i][0]+ '" title="Payment Confirmation"> <i class="fa fa-credit-card"> </i> </a> '+
 '<a href="" class="btn btn-warning btn-xs text-email" id="' +s[i][0]+ '" title="Send Invoice"> <i class="fa fa-envelope"> </i> </a> '+
 '<a href="" class="btn btn-primary btn-xs text-primary" id="' +s[i][0]+ '" title=""> <i class="fa fas-2x fa-edit"> </i> </a> '+
 '</div>'
@@ -501,6 +491,7 @@ $(document).ready(function (e) {
 '<a href="" class="'+stts+' btn-xs primary_status" id="' +s[i][0]+ '" title="Confirmation Status"> <i class="fa fa-power-off"> </i> </a> '+
 '<a href="" class="btn btn-success btn-xs text-print" id="' +s[i][0]+ '" title="Invoice Status"> <i class="fa fa-print"> </i> </a> '+
 '<a href="" class="btn btn-default btn-xs text-confirmation" id="' +s[i][0]+ '" title="Shipping Confirmation"> <i class="fa fa-truck"> </i> </a> '+
+'<a href="" class="btn btn-default btn-xs text-payment" id="' +s[i][0]+ '" title="Payment Confirmation"> <i class="fa fa-credit-card"> </i> </a> '+
 '<a href="" class="btn btn-warning btn-xs text-email" id="' +s[i][0]+ '" title="Send Invoice"> <i class="fa fa-envelope"> </i> </a> '+
 '<a href="" class="btn btn-primary btn-xs text-primary" id="' +s[i][0]+ '" title=""> <i class="fa fas-2x fa-edit"> </i> </a> '+
 '</div>'

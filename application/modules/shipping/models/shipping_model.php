@@ -15,7 +15,7 @@ class Shipping_model extends Custom_Model
     
     protected $field = array('shipping.id', 'shipping.sales_id', 'shipping.shipdate', 'shipping.courier', 'shipping.awb',
                              'shipping.origin', 'shipping.origin_id', 'shipping.origin_desc',
-                             'shipping.dest', 'shipping.dest_id', 'shipping.dest_desc', 'shipping.package', 'shipping.rate', 
+                             'shipping.dest', 'shipping.district', 'shipping.dest_desc', 'shipping.package', 'shipping.rate', 
                              'shipping.weight', 'shipping.amount', 'shipping.paid_date', 'shipping.status');
     protected $com;
     

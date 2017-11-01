@@ -9,7 +9,7 @@ class Sales_item_model extends Custom_Model
         $this->tableName = 'sales_item';
     }
     
-    protected $field = array('id', 'sales_id', 'product_id', 'qty', 'tax', 'amount', 'price', 'attribute');
+    protected $field = array('id', 'sales_id', 'product_id', 'qty', 'tax', 'amount', 'price', 'attribute', 'description');
     
     function get_last_item($pid)
     {

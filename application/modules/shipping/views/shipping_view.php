@@ -130,7 +130,7 @@
                 </select> &nbsp;
               </div>
               
-          <div class="form-group">
+          <div class="form-group btn-group">
            <br>      
            <button type="submit" class="btn btn-primary button_inline"> Filter </button>
            <button type="reset" onClick="" class="btn btn-success button_inline"> Clear </button>
@@ -160,13 +160,17 @@
 </form>       
              </div>
 
-            <!-- Trigger the modal with a button  -->
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal3"> Report  </button>
-            <button type="button" class="btn btn-primary" id="btest"> Test  </button>
-               
-               <!-- links -->
-	           <?php if (!empty($link)){foreach($link as $links){echo $links . '';}} ?>
-               <!-- links -->             
+            <div class="btn-group">   
+                
+        <!-- Trigger the modal with a button  -->
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal3"> Report  </button>
+
+       <!-- links -->
+       <?php if (!empty($link)){foreach($link as $links){echo $links . '';}} ?>
+       <!-- links -->   
+                
+            </div> 
+                  
             </div>
           </div>  
     

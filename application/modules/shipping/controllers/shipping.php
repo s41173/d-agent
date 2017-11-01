@@ -22,10 +22,11 @@ class Shipping extends MX_Controller
         $this->product = new Product_lib();
         $this->sales = new Sales_lib();
         $this->shipping = new Shipping_lib();
+        $this->shiprate = new Shiprate_lib();
     }
 
     private $properti, $modul, $title;
-    private $role, $currency, $customer, $payment, $city, $product, $sales, $shipping;
+    private $role, $currency, $customer, $payment, $city, $product, $sales, $shipping, $shiprate;
 
     function index()
     {
@@ -49,7 +50,7 @@ class Shipping extends MX_Controller
            $sales = $this->sales->get_detail_sales($res->sales_id);
            
 	   $output[] = array ($res->id, 
-                              'SO-0'.$res->sales_id, // sales no
+                              $sales->code, // sales no
                               tglin($sales->dates), // sales date
                               $this->customer->get_name($sales->cust_id), // customer
                               tglin($res->shipdate), // shipping date
@@ -140,7 +141,7 @@ class Shipping extends MX_Controller
 //       if ($val->approved == 0){ $lng = array('approved' => 1); }else { $lng = array('approved' => 0); }
 //       $this->Shipping_model->update($uid,$lng);
 //       echo 'true|Status Changed...!';
-         echo "error|Please make confirmation transaction, to change this status...!";
+         echo "error|Please make payment confirmation transaction, to change this status...!";
        }else{ echo "error|Sorry, you do not have the right to change publish status..!"; }
     }
     
@@ -343,7 +344,7 @@ class Shipping extends MX_Controller
         $sales = $this->sales->get_detail_sales($shipping->sales_id);
         
         echo $sid.'|'.$shipping->sales_id.'|'.tglin($sales->dates).'|'.strtoupper($shipping->courier).'|'.$shipping->package.'|'.$shipping->awb.'|'.
-             $shipping->dest.'|'.$shipping->dest_desc;
+             $this->shiprate->get_city_name($shipping->dest).'|'.$shipping->dest_desc.'|'.$sales->code.'|'.$shipping->district;
     }
     
         // Fungsi update untuk menset texfield dengan nilai dari database
@@ -375,7 +376,7 @@ class Shipping extends MX_Controller
             $data['c_zip'] = $customer->zip;
 
             // shipping
-            $data['so'] = 'SO-0'.$shipping->sales_id;
+            $data['so'] = $sales->code;
             $data['dates'] = tglin($shipping->shipdate);
 
             if ($shipping->paid_date){ $data['paid'] = 'Paid'; }else { $data['paid'] = 'Unpaid'; }
@@ -383,7 +384,7 @@ class Shipping extends MX_Controller
 
             // weight total
             $total = $this->sales->total($shipping->sales_id);
-            $data['weight'] = round($total['weight']);
+            $data['weight'] = $shipping->weight;
 
             // shipping details
             $shipping = $this->Shipping_model->get_by_id($param)->row();
@@ -395,7 +396,7 @@ class Shipping extends MX_Controller
             $data['awb'] = strtoupper($shipping->awb);
             $data['rate'] = $shipping->rate;
             $data['dest_desc'] = $shipping->dest_desc;
-            $data['dest'] = $shipping->dest;
+            $data['dest'] = $this->shiprate->get_city_name($shipping->dest);
 
             if (!$shipping->shipdate){ $data['ship_status'] = 'Not Shipped'; }else { $data['ship_status'] = 'Shipped'; } 
 
@@ -436,33 +437,42 @@ class Shipping extends MX_Controller
         $shipping = $this->Shipping_model->get_by_id($sid)->row();
 	$this->session->set_userdata('langid', $shipping->id);
         
-        echo $sid.'|'.$shipping->status.'|'.$shipping->shipdate;
+        echo $sid.'|'.$shipping->status.'|'.$shipping->shipdate.'|'.$shipping->awb;
     }
     
-    function paid_confirmation()
+    function paid_confirmation($sid)
     {
-        $nilai = $this->input->post('nilai');
-
-        if ($this->input->post('confirm') == 1)
-        {
-            for($i=0; $i < count($nilai); $i++)
-            {
-              if ($this->valid_shipdate($nilai[$i], 'ajax') == FALSE) 
-              {
-                 $shipping = array('paid_date' => $this->input->post('dates'),'status' => 1);
-                 $this->Shipping_model->update($nilai[$i], $shipping); 
-              }
-            }
-        }
-        else {
-            for($i=0; $i < count($nilai); $i++)
-            {
-              $shipping = array('paid_date' => null,'status' => 0);
-              $this->Shipping_model->update($nilai[$i], $shipping); 
-            }
-        }
+        $shipping = $this->Shipping_model->get_by_id($sid)->row();
+	$this->session->set_userdata('langid', $shipping->id);
         
-        echo 'true|Paid Confirmation Progress Done..!';
+        echo $sid.'|'.$shipping->paid_date;
+    }
+    
+    function paid_confirmation_process()
+    {
+       if ($this->acl->otentikasi2($this->title,'ajax') == TRUE){
+
+	// Form validation
+        $this->form_validation->set_rules('tpdates', 'Paid Date', '');
+        
+        $shipdate = $this->Shipping_model->get_by_id($this->session->userdata('langid'))->row();
+        $shipdate = $shipdate->shipdate;
+
+        if ($this->form_validation->run($this) == TRUE)
+        {  
+            if ($this->input->post('tpdates') && $shipdate != null){
+                $shipping = array('paid_date' => $this->input->post('tpdates'), 'status' => 1, 'updated' => date('Y-m-d H:i:s'));
+                $stts = 'confirmed!';
+            }
+            else { $shipping = array('paid_date' => null, 'status' => 0, 'updated' => date('Y-m-d H:i:s')); 
+                $stts = 'unconfirmed!';   
+            }   
+                
+            $this->Shipping_model->update($this->session->userdata('langid'), $shipping);
+            echo "true|One $this->title shipping status successfully ".$stts;
+        }
+        else{ echo "error|One $this->title shipping status successfully ".$stts; }
+        }else { echo "error|Sorry, you do not have the right to edit $this->title component..!"; } 
     }
     
     function payment_confirmation()
@@ -480,7 +490,7 @@ class Shipping extends MX_Controller
         if ($this->form_validation->run($this) == TRUE && $this->valid_payment_confirm($this->session->userdata('langid')) == TRUE)
         {  
             if ($this->input->post('cstts') == '1'){
-                $shipping = array('shipdate' => $this->input->post('tcdates'), 'updated' => date('Y-m-d H:i:s'));
+                $shipping = array('shipdate' => $this->input->post('tcdates'), 'awb' => $this->input->post('tairway'), 'updated' => date('Y-m-d H:i:s'));
                 $stts = 'confirmed!';
             }
             else { $shipping = array('shipdate' => null, 'updated' => date('Y-m-d H:i:s')); 
@@ -488,11 +498,10 @@ class Shipping extends MX_Controller
             }   
                 
             // lakukan action email ke customer
-            
             $this->Shipping_model->update($this->session->userdata('langid'), $shipping);
             echo "true|One $this->title shipping status successfully ".$stts;
         }
-        else{ echo "error|". validation_errors(). '- Payment Status Already Confirmed'; }
+        else{ echo "error|". validation_errors(). '- Shipping Status Already Confirmed'; }
         }else { echo "error|Sorry, you do not have the right to edit $this->title component..!"; } 
     }
     

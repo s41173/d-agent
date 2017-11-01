@@ -28,30 +28,9 @@ $(document).ready(function (e) {
 		var del_id = element.attr("id");
 		var url = sites_confirmation +"/"+ del_id;
 		$(".error").fadeOut();
-		
-		$("#myModal").modal('show');
 
-		// batas
-		$.ajax({
-			type: 'POST',
-			url: url,
-    	    cache: false,
-			headers: { "cache-control": "no-cache" },
-			success: function(result) {
-				
-				res = result.split("|");
-				
-				$("#taccname").val(res[1]);
-				$("#taccno").val(res[2]);
-				$('#taccbank').val(res[3]);
-				$('#tamount').val(res[4]);
-			    $('#cbank').val(res[5]);
-			    $('#cstts').val(res[6]);
-			    $('#tcdates').val(res[7]);
-			    $('#ttime').val(res[8]);	
-			}
-		})
-		return false;	
+		// window.location.href = url;
+		window.open(url, "Sales Payment : "+del_id, "toolbar=yes,scrollbars=yes,resizable=yes,top=200,left=600,width=1024,height=800");	
 	});
 	
 	// fungsi jquery update
@@ -298,9 +277,8 @@ $(document).ready(function (e) {
 	$('#searchform').submit(function() {
 		
 		var cust = $("#ccustomer_search").val();
-		var paid = $("#cpaid").val();
 		var confirm = $("#cconfirm").val();
-		var param = ['searching',cust,paid,confirm];
+		var param = ['searching',cust,confirm];
 		
 		$.ajax({
 			type: 'POST',
@@ -313,7 +291,6 @@ $(document).ready(function (e) {
 				
 				if (!param[1]){ param[1] = 'null'; }
 				if (!param[2]){ param[2] = 'null'; }
-				if (!param[3]){ param[3] = 'null'; }
 				load_data_search(param);
 			}
 		});
@@ -339,7 +316,7 @@ $(document).ready(function (e) {
 			
 		    $.ajax({
 				type : 'GET',
-				url: source+"/"+search[0]+"/"+search[1]+"/"+search[2]+"/"+search[3],
+				url: source+"/"+search[0]+"/"+search[1]+"/"+search[2],
 				//force to handle it as text
 				contentType: "application/json",
 				dataType: "json",

@@ -37,7 +37,7 @@
 	var sites_edit = "<?php echo site_url('sales/update_process/');?>";
 	var sites_del  = "<?php echo site_url('sales/delete/');?>";
 	var sites_get  = "<?php echo site_url('sales/update/');?>";
-    var sites_confirmation  = "<?php echo site_url('sales/confirmation/');?>";
+    var sites_confirmation  = "<?php echo site_url('sales_payment/get_last/');?>";
     var sites_print_invoice  = "<?php echo site_url('sales/invoice/');?>";
     var sites_primary   = "<?php echo site_url('sales/publish/');?>";
 	var sites_attribute = "<?php echo site_url('sales/attribute/');?>";
@@ -108,7 +108,7 @@
             <input type="number" class="form-control" style="max-width:80px;" name="tyear" id="tyear" value="<?php echo $year; ?>">
           </div>
 
-      <div class="form-group">
+      <div class="form-group btn-group">
        <button type="submit" class="btn btn-primary button_inline"> Filter </button>
        <a href="<?php echo site_url('sales'); ?>" class="btn btn-success button_inline"> Reset </a>
       </div>
@@ -147,20 +147,11 @@
              
              <div class="form-group">
                 <label class="control-label labelx"> Agent : </label> <br>  
-                <?php $js = "class='select2_single form-control' id='ccustomer_search' tabindex='-1' style='min-width:200px;' "; 
+                <?php $js = "class='select2_single form-control' id='ccustomer_search' tabindex='-1' style='min-width:230px;' "; 
 			        echo form_dropdown('ccustomer', $agent, isset($default['customer']) ? $default['customer'] : '', $js); ?>
                    &nbsp;
               </div>
-              
-              <div class="form-group">
-                <label class="control-label labelx"> Paid Status : </label> <br>    
-                <select name="cpaid" id="cpaid" class="form-control" style="min-width:150px;">
-                   <option value="" selected> -- </option>
-                   <option value="1"> Paid </option>
-                   <option value="0"> Unpaid </option>
-                </select> &nbsp;
-              </div>
-               
+                           
               <div class="form-group">
                 <label class="control-label labelx"> Confirmation Status : </label> <br>    
                 <select name="cconfirm" id="cconfirm" class="form-control" style="min-width:150px;">
@@ -219,7 +210,7 @@
     
       <!-- Modal - Add Form -->
       <div class="modal fade" id="myModal" role="dialog">
-         <?php $this->load->view('sales_confirmation'); ?>      
+         <?php //$this->load->view('sales_confirmation'); ?>      
       </div>
       <!-- Modal - Add Form -->
       

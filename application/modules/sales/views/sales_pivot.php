@@ -42,8 +42,6 @@
 	<div style="border:0px solid red; float:left;">
 		<table border="0">
 			<tr> <td> Period </td> <td> : </td> <td> <?php echo $start.' - '.$end; ?> </td> </tr>
-            <tr> <td> Paid Status </td> <td> : </td> <td> <?php echo $paid; ?> </td> </tr>
-            <tr> <td> Confirmation Status </td> <td> : </td> <td> <?php echo $confirm; ?> </td> </tr>
 			<tr> <td> Run Date </td> <td> : </td> <td> <?php echo $rundate; ?> </td> </tr>
 			<tr> <td> Log </td> <td> : </td> <td> <?php echo $log; ?> </td> </tr>
 		</table>
@@ -63,15 +61,15 @@
         <div style='margin-top: 10px;' id="output"> </div>
         </div>
 
-		<table id="input" border="0" width="100%" style="visibility:hidden;">
-		 <thead>
+		<table id="input" border="0" width="100%">
+		   <thead>
            <tr>
-<th> No </th> <th> Code </th> <th> Date </th> <th> Due Date </th> <th> Customer </th> <th> Total </th> <th> Tax </th>
-<th> Cost </th> <th> Amount </th> <th> Shipping </th> <th> Payment Type </th> <th> Paid Date </th> <th> Confirmation </th> 
+<th> No </th> <th> Code </th> <th> Date </th> <th> Customer </th> <th> Total </th> <th> Tax </th>
+<th> Cost </th> <th> Shipping </th> <th> Amount </th> <th> Balance </th> <th> Confirmation </th> 
 <th> Log </th>
            </tr>
            </thead>
-
+		  
           <tbody> 
 		  <?php 
               
@@ -81,10 +79,10 @@
                   return strtoupper($res->get_name($val));
               }
               
-              function payment($val)
+              function payment($sid)
               {
-                  $res = new Payment_lib(); 
-                  return strtoupper($res->get_name($val));
+                  $res = new Sales_payment_lib(); 
+                  return floatval($res->total($sid));
               }
               
               function pstatus($val){ if ($val == 0){ return 'N'; }else{ return 'Y'; } }
@@ -97,26 +95,25 @@
 				   echo " 
 				   <tr> 
 				       <td class=\"strongs\">".$i."</td> 
-                       <td class=\"strongs\"> SO-0".$res->id."</td> 
+                       <td class=\"strongs\">".$res->code."</td> 
                        <td class=\"strongs\">".tglin($res->dates)."</td> 
-					   <td class=\"strongs\">".tglin($res->due_date)."</td>
                        <td class=\"strongs\">".customer($res->cust_id)."</td>
                        <td class=\"strongs\">".$res->total."</td>
                        <td class=\"strongs\">".$res->tax."</td>
                        <td class=\"strongs\">".$res->cost."</td>
-                       <td class=\"strongs\">".$res->amount."</td>
                        <td class=\"strongs\">".$res->shipping."</td>
-                       <td class=\"strongs\">".payment($res->payment_id)."</td>
-                       <td class=\"strongs\">".tglin($res->paid_date)."</td>
-                       <td class=\"strongs\">".pstatus($res->confirmation)."</td>
+                       <td class=\"strongs\">".floatval($res->amount+$res->cost+$res->shipping)."</td>
+                       <td class=\"strongs\">".floatval($res->amount+$res->cost+$res->shipping-payment($res->id))."</td>
+                       <td class=\"strongs\">".pstatus($res->approved)."</td>
                        <td class=\"strongs\">".$res->log."</td>
 				   </tr>";
 				   $i++;
 				}
 			 }  
 		  ?>
-		</tbody>   
+		</tbody>      
 		</table>
+        
 	</div>
 	
      <a style="float:left; margin:10px;" title="Back" href="<?php echo site_url('sales'); ?>"> 

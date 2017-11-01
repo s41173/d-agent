@@ -109,7 +109,7 @@ class Agent extends MX_Controller
     private function send_confirmation_sms($pid){
        
         $agent = $this->Agent_model->get_by_id($pid)->row();
-        $mess = "Anda telah terdaftar menjadi agen Delica Alumunium, dengan code : ".strtoupper($agent->code).". Terima Kasih.";
+        $mess = "Anda telah terdaftar menjadi agen Delica Alumunium, dengan code : ".strtoupper($agent->code).". Mohon cek email anda untuk informasi lebih lanjut. Terima Kasih.";
         return $this->sms->send($agent->phone1, $mess);
     }
     
@@ -132,7 +132,8 @@ class Agent extends MX_Controller
        $data['type']    = strtoupper($agent->type);
        $data['address'] = $agent->address;
        $data['phone']   = $agent->phone1.' / '.$agent->phone2;
-       $data['email']   = $agent->email;
+       $data['email']    = $agent->email;
+       $data['password'] = $agent->password;
        $data['zip']     = $agent->zip;
        $data['city']    = $this->city->get_name($agent->city);
        $data['joined']  = tglin($agent->joined).' / '. timein($agent->joined);

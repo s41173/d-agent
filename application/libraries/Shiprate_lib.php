@@ -21,6 +21,13 @@ class Shiprate_lib extends Custom_Model {
         return $data;
     }
     
+    function get_city_name($city){
+        
+        $this->db->where('cityid', $city);
+        $val = $this->db->get($this->tableName)->row();
+        return $val->city;
+    }
+    
     function combo_city(){
         
         $data = null;

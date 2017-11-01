@@ -68,15 +68,13 @@
                         { name: "No", type: "string" },
 						{ name: "Code", type: "string" },
 						{ name: "Date", type: "string" },
-						{ name: "Due Date", type: "string" },
 						{ name: "Customer", type: "string" },
 						{ name: "Total", type: "number" },
                         { name: "Tax", type: "number" },
                         { name: "Cost", type: "number" },
-                        { name: "Amount", type: "number" },
                         { name: "Shipping", type: "number" },
-                        { name: "Payment Type", type: "string" },
-                        { name: "Paid Date", type: "string" },
+                        { name: "Amount", type: "number" },
+                        { name: "Balance", type: "number" },
                         { name: "Confirmation", type: "string" },
                         { name: "Log", type: "string" }
                     ]
@@ -104,15 +102,14 @@
                   { text: 'No', dataField: 'No', width: 50 },
 				  { text: 'Code', dataField: 'Code', width : 100 },
 				  { text: 'Date', dataField: 'Date', width : 150 },
-  				  { text: 'Due Date', dataField: 'Due Date', width : 150 },
 				  { text: 'Customer', dataField: 'Customer', width : 250 },
     { text: 'Total', dataField: 'Total', width : 150, cellsalign: 'right', cellsformat: 'number', aggregates: ['sum'] },
     { text: 'Tax', datafield: 'Tax', width: 150, cellsalign: 'right', cellsformat: 'number', aggregates: ['sum'] },
     { text: 'Cost', dataField: 'Cost', width : 150, cellsalign: 'right', cellsformat: 'number', aggregates: ['sum'] },
-    { text: 'Amount', dataField: 'Amount', width : 150, cellsalign: 'right', cellsformat: 'number', aggregates: ['sum'] },
     { text: 'Shipping', dataField: 'Shipping', width : 150, cellsalign: 'right', cellsformat: 'number', aggregates: ['sum'] },
-                  { text: 'Payment Type', dataField: 'Payment Type', width : 150 },
-                  { text: 'Paid Date', dataField: 'Paid Date', width : 150 },
+    { text: 'Amount', dataField: 'Amount', width : 150, cellsalign: 'right', cellsformat: 'number', aggregates: ['sum'] },
+    { text: 'Balance', dataField: 'Balance', width : 150, cellsalign: 'right', cellsformat: 'number', aggregates: ['sum'] },
+    
                   { text: 'Confirmation', dataField: 'Confirmation', width : 100 },
                   { text: 'Log', dataField: 'Log', width : 100 }
                 ]
@@ -129,24 +126,24 @@
 				else if (type == 3){ $("#jqxgrid").jqxGrid('exportdata', 'csv', 'Sales-Summary'); }
 			});
 			
-			$('#jqxgrid').on('celldoubleclick', function (event) {
-     	  		var col = args.datafield;
-				var value = args.value;
-				var res;
-			
-				if (col == 'Code')
-				{ 			
-				   res = value.split("SO-0");
-				   openwindow(res[1]);
-				}
- 			});
-			
-			function openwindow(val)
-			{
-				var site = "<?php echo site_url('sales/invoice/');?>";
-				window.open(site+"/"+val, "", "width=800, height=600"); 
-				//alert(site+"/"+val);
-			}
+//			$('#jqxgrid').on('celldoubleclick', function (event) {
+//     	  		var col = args.datafield;
+//				var value = args.value;
+//				var res;
+//			
+//				if (col == 'Sales No')
+//				{ 			
+//				   res = value.split("SO-0");
+//				   openwindow(res[1]);
+//				}
+// 			});
+//			
+//			function openwindow(val)
+//			{
+//				var site = "<?php echo site_url('sales_payment/get_last/');?>";
+//				window.open(site+"/"+val, "", "width=800, height=600"); 
+//				//alert(site+"/"+val);
+//			}
 			
 			$("#table").hide();
 			
@@ -162,8 +159,6 @@
 	<div style="border:0px solid red; float:left;">
 		<table border="0">
 			<tr> <td> Period </td> <td> : </td> <td> <?php echo $start.' - '.$end; ?> </td> </tr>
-            <tr> <td> Paid Status </td> <td> : </td> <td> <?php echo $paid; ?> </td> </tr>
-            <tr> <td> Confirmation Status </td> <td> : </td> <td> <?php echo $confirm; ?> </td> </tr>
 			<tr> <td> Run Date </td> <td> : </td> <td> <?php echo $rundate; ?> </td> </tr>
 			<tr> <td> Log </td> <td> : </td> <td> <?php echo $log; ?> </td> </tr>
 		</table>
@@ -198,8 +193,8 @@
 		<table id="table" border="0" width="100%">
 		   <thead>
            <tr>
-<th> No </th> <th> Code </th> <th> Date </th> <th> Due Date </th> <th> Customer </th> <th> Total </th> <th> Tax </th>
-<th> Cost </th> <th> Amount </th> <th> Shipping </th> <th> Payment Type </th> <th> Paid Date </th> <th> Confirmation </th> 
+<th> No </th> <th> Code </th> <th> Date </th> <th> Customer </th> <th> Total </th> <th> Tax </th>
+<th> Cost </th> <th> Shipping </th> <th> Amount </th> <th> Balance </th> <th> Confirmation </th> 
 <th> Log </th>
            </tr>
            </thead>
@@ -213,10 +208,10 @@
                   return strtoupper($res->get_name($val));
               }
               
-              function payment($val)
+              function payment($sid)
               {
-                  $res = new Payment_lib(); 
-                  return strtoupper($res->get_name($val));
+                  $res = new Sales_payment_lib(); 
+                  return floatval($res->total($sid));
               }
               
               function pstatus($val){ if ($val == 0){ return 'N'; }else{ return 'Y'; } }
@@ -229,18 +224,16 @@
 				   echo " 
 				   <tr> 
 				       <td class=\"strongs\">".$i."</td> 
-                       <td class=\"strongs\"> SO-0".$res->id."</td> 
+                       <td class=\"strongs\">".$res->code."</td> 
                        <td class=\"strongs\">".tglin($res->dates)."</td> 
-					   <td class=\"strongs\">".tglin($res->due_date)."</td>
                        <td class=\"strongs\">".customer($res->cust_id)."</td>
                        <td class=\"strongs\">".$res->total."</td>
                        <td class=\"strongs\">".$res->tax."</td>
                        <td class=\"strongs\">".$res->cost."</td>
-                       <td class=\"strongs\">".$res->amount."</td>
                        <td class=\"strongs\">".$res->shipping."</td>
-                       <td class=\"strongs\">".payment($res->payment_id)."</td>
-                       <td class=\"strongs\">".tglin($res->paid_date)."</td>
-                       <td class=\"strongs\">".pstatus($res->confirmation)."</td>
+                       <td class=\"strongs\">".floatval($res->amount+$res->cost+$res->shipping)."</td>
+                       <td class=\"strongs\">".floatval($res->amount+$res->cost+$res->shipping-payment($res->id))."</td>
+                       <td class=\"strongs\">".pstatus($res->approved)."</td>
                        <td class=\"strongs\">".$res->log."</td>
 				   </tr>";
 				   $i++;

@@ -21,30 +21,21 @@
 </div>
 <div class="x_content">
 
-<form id="shipping_confirm" data-parsley-validate class="form-horizontal form-label-left" method="POST" action="<?php echo site_url('shipping/paid_confirmation'); ?>" 
+<form id="upload_form_non" data-parsley-validate class="form-horizontal form-label-left" method="POST" action="<?php echo site_url('shipping/paid_confirmation_process'); ?>" 
       enctype="multipart/form-data">
     
     <div class="form-group">
       <label for="middle-name" class="control-label col-md-3 col-sm-3 col-xs-12"> Payment Date </label>
       <div class="col-md-4 col-sm-12 col-xs-12">
-  <input id="dtime2" class="form-control col-md-7 col-xs-12" type="text" name="tpdates" required>
+  <input id="dtime2" class="form-control col-md-7 col-xs-12" type="text" name="tpdates">
       </div> 
     </div>
-      
-      <div class="form-group">
-      <label for="middle-name" class="control-label col-md-3 col-sm-3 col-xs-12"> Status </label>
-      <div class="col-md-3 col-sm-12 col-xs-12">
-          <select name="cstts" id="cpaid_stts" class="form-control">
-              <option value="1"> Confirm </option>
-              <option value="0"> Unconfirm </option>
-          </select>
-      </div>
-      </div>
 
       <div class="ln_solid"></div>
       <div class="form-group">
-          <div class="col-md-7 col-sm-7 col-xs-12 col-md-offset-3">
+          <div class="col-md-7 col-sm-7 col-xs-12 col-md-offset-3 btn-group">
           <button type="submit" class="btn btn-primary" id="button"> Save </button>
+          <button type="reset" class="btn btn-success" id="button"> Reset </button>
           <button type="button" id="bclose" class="btn btn-danger" data-dismiss="modal"> Close </button>
           </div>
       </div>

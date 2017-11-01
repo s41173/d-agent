@@ -27,31 +27,26 @@ class Sales_model extends Custom_Model
         return $this->db->get(); 
     }
     
-    function search($cust=null,$paid=null,$confirm=null)
+    function search($cust=null,$confirm=null)
     {   
         $this->db->select($this->field);
         $this->db->from($this->tableName); 
         $this->db->where('deleted', $this->deleted);
         $this->cek_null_string($cust, 'agent_id');
         
-        if ($paid == '1'){ $this->db->where('paid_date IS NOT NULL'); }
-        elseif ($paid == '0'){ $this->db->where('paid_date IS NULL'); }
-        
-        $this->cek_null_string($confirm, 'confirmation');
+        $this->cek_null_string($confirm, 'approved');
         $this->db->order_by('dates', 'desc'); 
         return $this->db->get(); 
     }
     
-    function report($start=null,$end=null,$paid=null,$confirm=null)
+    function report($start=null,$end=null)
     {   
         $this->db->select($this->field);
         $this->db->from($this->tableName); 
         $this->db->where('deleted', $this->deleted);
         $this->between('dates', $start, $end);
         
-        if ($paid == '1'){ $this->db->where('paid_date IS NOT NULL'); }
-        elseif ($paid == '0'){ $this->db->where('paid_date IS NULL'); }
-        $this->cek_null($confirm, 'confirmation');
+        $this->db->where('approved', 1);
         $this->db->order_by('dates', 'desc'); 
         return $this->db->get(); 
     }
@@ -99,7 +94,7 @@ class Sales_model extends Custom_Model
         $this->db->where('MONTH(sales.dates)', $month);
         $this->db->where('YEAR(sales.dates)', $year);
         $this->db->where('category.id', $cat);
-        $this->db->where('sales.confirmation', 1);
+        $this->db->where('sales.approved', 1);
         $query = $this->db->get()->row_array();
         return intval($query['qtys']);
     }
