@@ -29,10 +29,18 @@ class Sales extends MX_Controller
         $this->pmodel = new Model_lib();
         $this->shiprate = new Shiprate_lib();
         $this->sales_payment = new Sales_payment_lib();
+        $this->sms = new Sms_lib();
+        $this->material = new Material_lib();
+        $this->discount = new Discount_lib();
+        $this->color = new Color_lib();
+        
+        header('Access-Control-Allow-Origin: *');
+        header('Access-Control-Allow-Methods: GET, POST, PATCH, PUT, DELETE, OPTIONS');
+        header('Access-Control-Allow-Headers: Origin, Content-Type, X-Auth-Token'); 
     }
 
-    private $properti, $modul, $title, $sales, $wt ,$shipping, $bank, $pmodel, $shiprate;
-    private $role, $currency, $customer, $payment, $city, $product ,$category,$agent,$sales_payment;
+    private $properti, $modul, $title, $sales, $wt ,$shipping, $bank, $pmodel, $shiprate, $material, $discount;
+    private $role, $currency, $customer, $payment, $city, $product ,$category,$agent,$sales_payment, $color;
     
     function index()
     {
@@ -40,6 +48,11 @@ class Sales extends MX_Controller
        $this->session->unset_userdata('start'); 
        $this->session->unset_userdata('end');
        $this->get_last(); 
+    }
+    
+    private function test_sms(){
+        $result = $this->sms->sending_messabot('082277014410',"Hello From System Baru Lagi");
+        if ($result == TRUE){ echo 'berhasil'; }else{ echo 'gagal'; }
     }
         
     // function untuk memeriksa input user dari form sebagai admin
@@ -81,6 +94,70 @@ class Sales extends MX_Controller
       { return TRUE; }else{ return FALSE; }
     }
     
+    function get_weight()
+    {  
+        $datax = (array)json_decode(file_get_contents('php://input'));         
+        
+        $cart = new Cart_lib();
+        $agent = $datax['agent_id'];
+        $result = true;
+        $error = null;
+        $totweight = 0;
+        
+        $results = $cart->get_by_agent($agent)->result();
+        
+          foreach($results as $res){
+              
+              if ($this->product->valid_product($res->product_id)){
+                  
+                $qty = intval($res->qty);
+                $dimension = explode('|', $res->attribute);
+                                
+                $model = $this->product->get_detail_based_id($res->product_id);
+                
+                // get weight
+                $keliling = intval($dimension[0]*2) + intval($dimension[1]*2);
+                $weight = intval(intval($model->weight)*$keliling);
+                $weight = intval($qty*$weight);
+                
+                // get weight kaca
+                $weightglass = $this->material->get_glass_weight($dimension[0],$dimension[1],$dimension[6]);
+                $weightglass = intval($weightglass*$qty);
+                $totweight = floatval($totweight+$weight+$weightglass);
+                $margin = intval(0.1*$totweight);
+                $totweight = $totweight+$margin;
+                
+              }else { $result = false; $error = 'Invalid Product'; break; }
+          }
+        
+        $status = array('result' => $result, 'error' => $error, 'weight' => $totweight);
+        $response['status'] = $status;
+            
+        $this->output
+            ->set_status_header(200)
+            ->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($response,128))
+            ->_display();
+            exit;  
+    }
+    
+    private function set_discount($orderid){
+        $sales = $this->Sales_model->get_sales_based_order($orderid)->row();
+        
+        $amount = intval($sales->amount-$sales->tax);
+        $discount = $this->discount->get_discount($amount, $sales->agent_id, $sales->dates);
+        $discount = intval($sales->total*$discount/100);
+        $amount = intval($amount-$discount);
+        $tax = intval($amount*0.1);
+        $amount = intval($amount+$tax);
+        
+//        echo "amount : ".$amount.
+//             '<br>'.'discount : '.$discount;
+        
+        $param = array('discount' => $discount, 'tax' => $tax, 'amount' => $amount);
+        $this->Sales_model->update($sales->id, $param);
+    }
+    
     function add_item_json()
     {  
         $datax = (array)json_decode(file_get_contents('php://input'));         
@@ -91,8 +168,7 @@ class Sales extends MX_Controller
         $error = null;
         
         if ($this->cek_orderid($orderid) == TRUE && $this->valid_confirm($orderid,'code') == TRUE && $this->valid_shipping_json($datax['shipping']) == TRUE)
-        {
-
+        {  
           for($i=0; $i<count($content); $i++){
               
               if ($this->product->valid_product($content[$i]->product_id) == TRUE && $this->valid_json($content[$i]) == TRUE){
@@ -104,11 +180,23 @@ class Sales extends MX_Controller
                 $tax = floatval($percenttax*$amt_price);
                                 
                 $model = $this->product->get_detail_based_id($content[$i]->product_id);
-                $vol = intval($content[$i]->width*100)*intval($content[$i]->height*100)*intval($this->pmodel->get_height($model->model)/10);
-                $weight = intval($vol/6000);
+                
+                // get weight
+                $keliling = intval($content[$i]->width*2) + intval($content[$i]->height*2);
+                $weight = intval($model->weight*$keliling);
+                $weight = intval($qty*$weight);
+                $vol = 0;
+                
+                // get weight kaca
+                $weightglass = $this->material->get_glass_weight($content[$i]->width,$content[$i]->height,$content[$i]->glass_id);
+                $weightglass = intval($qty*$weightglass);
+                $totweight = floatval($weight+$weightglass);
+                
+                $margin = intval(0.1*$totweight);
+                $totweight = $totweight+$margin;
                 
                 $attr = $content[$i]->width.'|'.$content[$i]->height.'|'.$content[$i]->fixed_top.'|'.$content[$i]->fixed_bot.'|'.$content[$i]->color.'|'.
-                        $content[$i]->glasstype.'|'.$content[$i]->glass_id.'|'.$content[$i]->frame.'|'.$weight.'|'.$vol;
+                        $content[$i]->glasstype.'|'.$content[$i]->glass_id.'|'.$content[$i]->frame.'|'.$totweight.'|'.$vol;
                 
                 $sales = array('product_id' => $content[$i]->product_id, 'sales_id' => $this->Sales_model->get_id_based_order($orderid),
                                'qty' => $qty, 'tax' => $tax, 'attribute' => $attr, 'description' => $content[$i]->description,
@@ -121,6 +209,9 @@ class Sales extends MX_Controller
           
           // add shipping
           if ($result == true){ $this->shipping_json($datax); }
+          
+          // get discount status
+          $this->set_discount($orderid);
           
         }
         else{ $result = false; $error = 'Invalid Orderid'; }
@@ -181,8 +272,9 @@ class Sales extends MX_Controller
            
            if ($val->amount > 0 && $val->shipping > 0){ 
                $lng = array('approved' => 1); $this->Sales_model->update($uid,$lng); 
-               $this->pdf($uid);
-               $result = true; $error = null;
+               
+               if ( $this->pdf($uid) == TRUE ){ $result = true; $error = 'Sales Order : '.$datax['orderid'].' posted'; }
+               else{ $result = false; $error = 'error|Sending Error..!'; }
            }
            else { $result = false; $error = 'Invalid Amount..!'; }
         }    
@@ -197,6 +289,231 @@ class Sales extends MX_Controller
             ->set_output(json_encode($response,128))
             ->_display();
             exit;  
+    }
+    
+    function cek_orderid_json(){
+        
+        $datax = (array)json_decode(file_get_contents('php://input')); 
+        if ($this->Sales_model->valid_orderid($datax['orderid']) == FALSE){ $status = false; }else{ $status = true; }
+        
+        $response = array('status' => $status);
+        $this->output
+        ->set_status_header(201)
+        ->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response, 128))
+        ->_display();
+        exit;
+        
+    }
+    
+    function get_sales_details_json(){
+        
+        $datax = (array)json_decode(file_get_contents('php://input')); 
+        
+        $res = $this->Sales_model->get_sales_based_order($datax['orderid'])->row();
+        
+        $output[] = array ("id" => $res->id, "code" => $res->code, "dates" => $res->dates, "agent_id" => $res->agent_id,
+                           "cust_id" => $res->cust_id, 'customer' => $this->customer->get_name($res->cust_id), "amount" => $res->amount, "tax" => $res->tax, "cost" => $res->cost, "total" => $res->total,
+                           "shipping" => $res->shipping, "discount" => $res->discount, "approved" => $res->approved );
+        
+        $response['content'] = $output;
+        
+        $this->output
+        ->set_status_header(201)
+        ->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response, 128))
+        ->_display();
+        exit;
+        
+    }
+    
+    function get_sales_transaction_json(){
+        
+        $datax = (array)json_decode(file_get_contents('php://input')); 
+        
+        $res = $this->Sales_model->get_sales_based_order($datax['orderid'])->row();
+        
+        $output[] = array ("id" => $res->id, "code" => $res->code, "dates" => $res->dates, "agent_id" => $res->agent_id,
+                           "cust_id" => $res->cust_id, 'customer' => $this->customer->get_name($res->cust_id), "amount" => $res->amount, "tax" => $res->tax, "cost" => $res->cost, "total" => $res->total,
+                           "shipping" => $res->shipping, "discount" => $res->discount, "approved" => $res->approved );
+        
+        $response['content'] = $output;
+        
+        // get transaction item
+        $trans = $this->sitem->get_last_item($res->id)->result();
+        
+        foreach ($trans as $res) {
+          
+          $attr = explode('|', $res->attribute);
+          $product = $this->product->get_detail_based_id($res->product_id);
+          $output1[] = array ("id" => $res->id, "sales_id" => $res->sales_id, "product" => $product->name, "product_id" => $res->product_id, "qty" => $res->qty,
+                             "tax" => $res->tax, 'amount' => $res->amount, "price" => $res->price, "attribute" => $res->attribute, 
+                             "image" => base_url().'images/product/'.$product->image, "model" => $this->pmodel->get_name($product->model),
+                             "color" => $this->color->get_name($attr[4]), "description" => $res->description );  
+        }
+        
+        $response['transaction'] = $output1;
+        
+        // get shipping transaction
+        $shipping = $this->shipping->get_detail_based_sales($res->id);
+        
+        $output2[] = array ("id" => $shipping->id, "sales_id" => $shipping->sales_id, "shipdate" => $shipping->shipdate, "courier" => $shipping->courier,
+                           "awb" => $shipping->awb, 'origin' => $shipping->origin, 'origin_id' => $shipping->origin_id, 'origin_desc' => $shipping->origin_desc,
+                           "dest_id" => $shipping->dest, "dest" => $this->shiprate->get_city_name($shipping->dest), "district" => $shipping->district, "dest_desc" => $shipping->dest_desc, 
+                           "package" => $shipping->package,
+                           "rate" => $shipping->rate, "weight" => $shipping->weight, "amount" => $shipping->amount, "status" => $shipping->status );
+        
+        $response['shipping'] = $output2;
+        
+        $this->output
+        ->set_status_header(201)
+        ->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response, 128))
+        ->_display();
+        exit;
+        
+    }
+    
+    function get_shipping_details_json(){
+        
+        $datax = (array)json_decode(file_get_contents('php://input')); 
+        
+        $uid = $this->Sales_model->get_id_based_order($datax['orderid']);
+        $res = $this->shipping->get_detail_based_sales($uid);
+        
+        $output[] = array ("id" => $res->id, "sales_id" => $res->sales_id, "shipdate" => $res->shipdate, "courier" => $res->courier,
+                           "awb" => $res->awb, 'origin' => $res->origin, 'origin_id' => $res->origin_id, 'origin_desc' => $res->origin_desc,
+                           "dest_id" => $res->dest, "dest" => $this->shiprate->get_city_name($res->dest), "district" => $res->district, "dest_desc" => $res->dest_desc, "package" => $res->package,
+                           "rate" => $res->rate, "weight" => $res->weight, "amount" => $res->amount, "status" => $res->status );
+        
+        $response['content'] = $output;
+        
+        $this->output
+        ->set_status_header(201)
+        ->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response, 128))
+        ->_display();
+        exit;
+        
+    }
+    
+   //    fungsi untuk mendapatkan sales list berdasarkan agent dan status approved
+    
+    function get_sales_by_agent_json(){
+        
+        $datax = (array)json_decode(file_get_contents('php://input')); 
+        
+        $output = null;
+        $result = $this->Sales_model->search_json($datax['agent_id'],$datax['confirm'],$datax['limit'])->result();
+        
+        foreach ($result as $res){
+            
+            $output[] = array ("id" => $res->id, "code" => $res->code, "dates" => $res->dates, "agent_id" => $res->agent_id,
+                               "cust_id" => $res->cust_id, 'customer' => $this->customer->get_name($res->cust_id), "amount" => $res->amount, "tax" => $res->tax, "cost" => $res->cost, "total" => $res->total,
+                               "shipping" => $res->shipping, "discount" => $res->discount, "approved" => $res->approved );
+        }
+                
+        $response['content'] = $output;
+        
+        $this->output
+        ->set_status_header(201)
+        ->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response, 128))
+        ->_display();
+        exit;
+        
+    }
+    
+    //    fungsi untuk mendapatkan sales list berdasarkan agent dan sudah lunas atau belum
+    function get_sales_status_by_agent_json(){
+        
+        $datax = (array)json_decode(file_get_contents('php://input')); 
+        
+        $output = null;
+        $result = $this->Sales_model->search_json($datax['agent_id'],1, $datax['limit'])->result();
+        
+        foreach ($result as $res){
+            
+           $total = intval($res->amount);  
+           $payment = $this->sales_payment->total($res->id);
+           
+           if ($datax['status'] == 'C'){
+               
+               if (floatval($total+$res->shipping-$payment) > 0){ 
+                   
+                $output[] = array ("id" => $res->id, "code" => $res->code, "dates" => $res->dates, "agent_id" => $res->agent_id,
+                "cust_id" => $res->cust_id, 'customer' => $this->customer->get_name($res->cust_id), "amount" => $res->amount, "tax" => $res->tax, "cost" => $res->cost, "total" => $res->total,
+                "shipping" => $res->shipping, "discount" => $res->discount, "approved" => $res->approved, "payment_total" => $payment );
+                   
+               }
+           }else{
+               
+               if (floatval($total+$res->shipping-$payment) <= 0){  
+                   
+                $output[] = array ("id" => $res->id, "code" => $res->code, "dates" => $res->dates, "agent_id" => $res->agent_id,
+                "cust_id" => $res->cust_id, 'customer' => $this->customer->get_name($res->cust_id), "amount" => $res->amount, "tax" => $res->tax, "cost" => $res->cost, "total" => $res->total,
+                "shipping" => $res->shipping, "discount" => $res->discount, "approved" => $res->approved, "payment_total" => $payment );
+               }
+               
+           }
+        }
+                
+        $response['content'] = $output;
+        
+        $this->output
+        ->set_status_header(201)
+        ->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response, 128))
+        ->_display();
+        exit;
+        
+    }
+    
+    // edit transaction
+     function edit_transaction(){
+        
+        $datax = (array)json_decode(file_get_contents('php://input')); 
+        
+        $price = floatval($datax['price']);
+        $qty   = intval($datax['qty']);
+        $amt_price = floatval($qty*$price);
+        $percenttax = 0.1;
+        $tax = floatval($percenttax*$amt_price);
+        
+        $sales = array( 'qty' => $qty, 'tax' => $tax, 'price' => $price, 'amount' => floatval($amt_price));
+        $this->sitem->update_trans($datax['id'],$sales);
+        
+        $response = array('status' => true);
+                
+        $this->output
+        ->set_status_header(201)
+        ->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response, 128))
+        ->_display();
+        exit;
+    }
+    
+    // delete transaction
+    function delete_transaction(){
+        
+        $datax = (array)json_decode(file_get_contents('php://input')); 
+        $this->sitem->delete($datax['id']);
+        
+        $id = $this->Sales_model->get_id_based_order($datax['orderid']);
+        
+        $tot = $this->sitem->total($id);
+        $tot = intval($tot['amount']);
+        if ($tot == 0){ $this->Sales_model->force_delete($id); }
+        
+        $response = array('status' => true, 'reload' => true);
+                
+        $this->output
+        ->set_status_header(201)
+        ->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response, 128))
+        ->_display();
+        exit;
+        
     }
     
     function json_process()
@@ -274,7 +591,7 @@ class Sales extends MX_Controller
                 
          foreach($result as $res)
 	 {
-           $total = intval($res->amount);  
+           $total = intval($res->amount-$res->discount);  
            $payment = $this->sales_payment->total($res->id);
            if (floatval($total+$res->shipping-$payment) > 0){ $status = 'C'; }else{ $status = 'S'; }
            
@@ -361,17 +678,31 @@ class Sales extends MX_Controller
        $val = $this->Sales_model->get_by_id($uid)->row();
        if ($val->approved == 0){
            
-           if ($val->amount > 0 && $val->shipping > 0){ $lng = array('approved' => 1); $this->pdf($uid); $mess = 'true|Sales Order Confirmed..!';   }
+           if ($val->amount > 0 && $val->shipping > 0){ 
+              $lng = array('approved' => 1);
+              if ( $this->pdf($uid) == TRUE ){ $mess = 'true|Sales Order Confirmed..!'; }
+              else{ $mess = 'error|Sending Error..!'; }
+           }
            else { $lng = array('approved' => 0); $mess = 'error|Error Validation Amount..!'; }
        }    
-       else { $lng = array('approved' => 0); $pdf = "./downloads/".$val->code.'.pdf'; unlink("$pdf"); $mess = 'true|Sales Order Unconfirmed..!'; }
+       else { $lng = array('approved' => 0); $pdf = "./downloads/".$val->code.'.pdf'; @unlink("$pdf"); $mess = 'true|Sales Order Unconfirmed..!'; }
        
        $this->Sales_model->update($uid,$lng);
        echo $mess;
        }else{ echo "error|Sorry, you do not have the right to change publish status..!"; }
     }
     
-    function send_confirmation_email($sid)
+     private function send_confirmation_sms($sid){
+       
+        $sales = $this->Sales_model->get_by_id($sid)->row();
+        $customer = $this->customer->get_details($sales->cust_id)->row();
+        
+        $amount = idr_format(floatval($sales->amount+$sales->cost+$sales->shipping));
+        $mess = "Konfirmasi pesanan anda dengan no : ".$sales->code." sebesar ".$amount.",- Mohon periksa email anda untuk informasi tagihan lebih lanjut.";
+        return $this->sms->send($customer->phone1, $mess);
+    }
+    
+    private function send_confirmation_email($sid)
     {   
         // property display
        $data['p_logo'] = $this->properti['logo'];
@@ -406,6 +737,7 @@ class Sales extends MX_Controller
         $html = $this->load->view('sales_confirmation_mess',$data,true); 
         $this->email->subject('Sales Order - '.strtoupper($sales->code));
         $this->email->message($html);
+        $this->email->attach(FCPATH."/downloads/".$sales->code.".pdf");
 
         if (!$this->email->send()){ return false; }else{ return true;  }
     }
@@ -448,7 +780,9 @@ class Sales extends MX_Controller
         if ($this->acl->otentikasi_admin($this->title,'ajax') == TRUE){
             
             $val = $this->Sales_model->get_by_id($uid)->row();
-            $pdf = "./downloads/".$val->code.'.pdf'; unlink("$pdf");
+            $pdf = "./downloads/".$val->code.'.pdf'; @unlink("$pdf");
+            $this->shipping->delete_by_sales($uid);
+            $this->sales_payment->delete_by_sales($uid);
             $this->Sales_model->delete($uid);
             $this->session->set_flashdata('message', "1 $this->title successfully removed..!");
 
@@ -548,7 +882,7 @@ class Sales extends MX_Controller
         $price = intval($totals['amount']);
         
         // shipping total        
-        $transaction = array('tax' => $totals['tax'], 'total' => $price, 'amount' => intval($totals['tax']+$price), 'shipping' => $this->shipping->total($sid));
+        $transaction = array('tax' => $totals['tax'], 'total' => intval($price-$totals['tax']), 'amount' => intval($price), 'shipping' => $this->shipping->total($sid));
 	$this->Sales_model->update($sid, $transaction);
     }
     
@@ -697,8 +1031,8 @@ class Sales extends MX_Controller
 
             // weight total
             $total = $this->sitem->total($param);
-            $data['tax']    = $sales->tax;
-            
+            $data['tax'] = $sales->tax;
+            $data['discount'] = $sales->discount;
             // bank
             $data['banks'] = $this->bank->get();
 
@@ -710,6 +1044,34 @@ class Sales extends MX_Controller
                 return $html;
             }
         }
+    }
+    
+    function send_email_offer_json(){
+        
+        $datax = (array)json_decode(file_get_contents('php://input')); 
+        
+        $error = null;
+        $sid = $this->Sales_model->get_id_based_order($datax['orderid']);
+        $no = $datax['orderid'];
+        
+        $pdfFilePath = FCPATH."/downloads/".$no.".pdf";
+        if (file_exists($pdfFilePath) == TRUE){ 
+            
+          if ($this->send_confirmation_email($sid) == TRUE && $this->send_confirmation_sms($sid) == TRUE)
+          { $status = true; $error = 'Invoice Sent..!'; }
+          else { $status = false; $error = 'Failed to sending invoice..!'; }
+        }
+        else{ $status = false; $error = 'File not existed..!'; }
+        
+        $status = array('status' => $status, 'error' => $error);
+        $response['status'] = $status;
+            
+        $this->output
+            ->set_status_header(200)
+            ->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($response,128))
+            ->_display();
+            exit;  
     }
     
     private function pdf($sid=0)
@@ -732,6 +1094,14 @@ class Sales extends MX_Controller
             $pdf->WriteHTML($html); // write the HTML into the PDF
             $pdf->Output($pdfFilePath, 'F'); // save to file because we can
         }
+        
+        if (file_exists($pdfFilePath) == TRUE){ 
+            
+          if ($this->send_confirmation_email($sid) == TRUE && $this->send_confirmation_sms($sid) == TRUE)
+          { return TRUE; }
+          else { return FALSE; }
+        }
+        else{ return FALSE; }
     }
     
     
@@ -756,7 +1126,6 @@ class Sales extends MX_Controller
 
             $this->Sales_model->update($param, $sales);
             $this->update_trans($param);
-            $this->mail_invoice($param); // send email confirmation
             $this->session->set_flashdata('message', "One $this->title data successfully saved!");
             echo "true|One $this->title data successfully saved!|".$param;
         }
@@ -817,62 +1186,6 @@ class Sales extends MX_Controller
         }
         else{ echo "error|". validation_errors(); $this->session->set_flashdata('message', validation_errors()); }
         }else { echo "error|Sorry, you do not have the right to edit $this->title component..!"; } 
-    }
-    
-    private function mail_invoice($pid)
-    {   
-        // property display
-       $data['p_logo'] = $this->properti['logo'];
-       $data['p_name'] = $this->properti['name'];
-       $data['p_site_name'] = $this->properti['sitename'];
-       $data['p_address'] = $this->properti['address'];
-       $data['p_zip'] = $this->properti['zip'];
-       $data['p_city'] = $this->properti['city'];
-       $data['sites_url'] = constant("BASE_URL");
-       
-       $sales = $this->Sales_model->get_by_id($pid)->row();
-       $cust = $this->customer->get_details($sales->cust_id)->row();
-       $shipping = $this->shipping->get_detail_based_sales($pid);
-      
-       $data['so_no']   = 'DISO-0'.$pid;
-       $data['so_date'] = tglin($sales->dates).' '. timein($sales->dates);
-       $data['c_name'] = ucfirst($cust->first_name.' '.$cust->last_name);
-       $data['c_phone'] = $cust->phone1.' / '.$cust->phone2;
-       $data['payment'] = $this->payment->get_name($sales->payment_id);
-       $data['courier'] = strtoupper($shipping->courier);
-       $data['package'] = strtoupper($shipping->package);
-       $data['ship_address'] = $shipping->dest_desc;
-       $data['sub_total'] = num_format($sales->amount);
-       $data['shipping_amt'] = num_format($sales->shipping);
-       $data['total'] = num_format(floatval($sales->amount+$sales->shipping));
-       
-       $data['item'] = $this->sitem->get_last_item($pid)->result();
-       
-       if($sales->confirmation == 0){ 
-          $data['status'] = 'Pending'; 
-          $html = $this->load->view('sales_order_credit',$data,true);
-          $subject = 'Konfirmasi Pesanan - '.$data['so_no'].' - '.$data['p_name'];
-       }else{ $data['status'] = 'Lunas'; 
-         $html = $this->load->view('sales_order_lunas',$data,true); 
-         $subject = 'Pembayaran Sukses - '.$data['so_no'].' - '.$data['p_name'];
-       }
-         
-        // email send
-        $this->load->library('email');
-        $config['charset']  = 'utf-8';
-        $config['wordwrap'] = TRUE;
-        $config['mailtype'] = 'html';
-
-        $this->email->initialize($config);
-        $this->email->from($this->properti['billing_email'], $this->properti['name']);
-        $this->email->to($cust->email);
-        $this->email->cc($this->properti['cc_email']); 
-
-        $this->email->subject($subject);
-        $this->email->message($html);
-//        $pdfFilePath = FCPATH."/downloads/".$no.".pdf";
-
-        if (!$this->email->send()){ return false; }else{ return true;  }
     }
     
     private function change_product($sid,$type=1)

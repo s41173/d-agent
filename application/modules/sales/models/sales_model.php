@@ -13,7 +13,7 @@ class Sales_model extends Custom_Model
         $this->tableName = 'sales';
     }
     
-    protected $field = array('id', 'code', 'dates', 'agent_id', 'cust_id', 'amount', 'tax', 'cost', 'total', 'shipping',                            
+    protected $field = array('id', 'code', 'dates', 'agent_id', 'cust_id', 'amount', 'tax', 'cost', 'discount', 'total', 'shipping',                            
                              'approved', 'log', 'created', 'updated', 'deleted');
     protected $com;
     
@@ -35,6 +35,18 @@ class Sales_model extends Custom_Model
         $this->cek_null_string($cust, 'agent_id');
         
         $this->cek_null_string($confirm, 'approved');
+        $this->db->order_by('dates', 'desc'); 
+        return $this->db->get(); 
+    }
+    
+    function search_json($agent=null,$confirm=null,$limit=0)
+    {   
+        $this->db->select($this->field);
+        $this->db->from($this->tableName); 
+        $this->db->where('deleted', $this->deleted);
+        $this->db->where('agent_id', $agent);
+        $this->db->where('approved', $confirm);
+        $this->db->limit($limit);
         $this->db->order_by('dates', 'desc'); 
         return $this->db->get(); 
     }
@@ -77,6 +89,12 @@ class Sales_model extends Custom_Model
         $this->db->where('code', $orderid);
         $query = $this->db->get($this->tableName)->row();
         return $query->id;
+    }
+    
+     function get_sales_based_order($orderid){
+        
+        $this->db->where('code', $orderid);
+        return $this->db->get($this->tableName);
     }
     
     function get_sales_qty_based_category($cat=0,$month=null,$year=null)

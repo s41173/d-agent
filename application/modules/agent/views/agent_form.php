@@ -105,13 +105,26 @@ echo form_dropdown('ccity', $city, isset($default['city']) ? $default['city'] : 
     
 <!-- account -->
     
-      <div class="col-md-9 col-sm-9 col-xs-12 form-group has-feedback">
+      <div class="col-md-6 col-sm-6 col-xs-12 form-group has-feedback">
+        <select name="cgroup" class="form-control" required title="Agent Group">
+          <option value=""> -- Group -- </option>
+          <option value="1"> Group 1 </option>
+          <option value="2"> Group 2 </option>
+          <option value="3"> Group 3 </option>
+          <option value="4"> Group 4 </option>
+          <option value="5"> Group 5 </option>
+        </select>
+      </div>    
+    
+      <div class="col-md-6 col-sm-6 col-xs-12 form-group has-feedback">
         <input type="file" id="uploadImage" accept="image/*" class="input-medium" title="Upload" name="userfile" /> <br>
         <img id="catimg" style=" max-width:50px; height:auto;">
       </div>
-      
+          
       <!-- pembatas div -->
       <div class="col-md-6 col-sm-6 col-xs-12 form-group has-feedback">
+          
+          
       </div>
        <!-- pembatas div --> 
 

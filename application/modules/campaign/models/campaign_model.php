@@ -14,7 +14,7 @@ class Campaign_model extends Custom_Model
     }
     
     protected $table = 'campaign';
-    protected $field = array('id', 'email_from', 'email_to', 'type', 'subject', 'category', 'article_id', 'dates', 'publish', 'created', 'updated', 'deleted');
+    protected $field = array('id', 'email_from', 'email_to', 'type', 'subject', 'category', 'content', 'dates', 'publish', 'created', 'updated', 'deleted');
     protected $com;
                 
     function get_last($limit, $offset=null)
@@ -27,12 +27,11 @@ class Campaign_model extends Custom_Model
         return $this->db->get(); 
     }
     
-    function search($cat=null,$type=null,$publish=null)
+    function search($type=null,$publish=null)
     {   
         $this->db->select($this->field);
         $this->db->from($this->tableName); 
         $this->db->where('deleted', $this->deleted);
-        $this->cek_null_string($cat, 'category');
         $this->cek_null_string($type, 'type');
         $this->cek_null_string($publish, 'publish');
         

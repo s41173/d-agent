@@ -41,7 +41,7 @@
     var sites_confirmation  = "<?php echo site_url('shipping/confirmation/');?>";
     var sites_payment_confirmation  = "<?php echo site_url('shipping/paid_confirmation/');?>";
     var sites_print_invoice  = "<?php echo site_url('shipping/invoice/');?>";
-    var sites_email_invoice  = "<?php echo site_url('shipping/mail_invoice/');?>";
+    var sites_email_invoice  = "<?php echo site_url('shipping/send_invoice_email/');?>";
     var sites_primary   = "<?php echo site_url('shipping/publish/');?>";
 	var sites_attribute = "<?php echo site_url('shipping/attribute/');?>";
 	var source = "<?php echo $source;?>";

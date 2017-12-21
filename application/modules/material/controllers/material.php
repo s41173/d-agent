@@ -37,7 +37,7 @@ class Material extends MX_Controller
 	{
            if ($res->glass == 1){ $glass = 'Y'; }else{ $glass = 'N'; } 
 	   $output[] = array ($res->id, $res->name, $this->modellib->get_name($res->model), $this->material->get_name($res->material_list), idr_format($res->price),
-                              $this->color->get_name($res->color), $res->type, $glass);
+                              $this->color->get_name($res->color), $res->type, $glass, $res->weight, $res->groups);
 	}
             $this->output
             ->set_status_header(200)
@@ -84,7 +84,7 @@ class Material extends MX_Controller
         $this->table->set_empty("&nbsp;");
 
         //Set heading untuk table
-        $this->table->set_heading('#','No', 'Model', 'Material List', 'Name', 'Color', 'Type', 'Price', 'Glass', 'Action');
+        $this->table->set_heading('#','No', 'Model', 'Material List', 'Name', 'Color', 'Type', 'Price', 'Thickness', 'Glass', 'Group', 'Action');
 
         $data['table'] = $this->table->generate();
         $data['source'] = site_url($this->title.'/getdatatable');
@@ -168,6 +168,8 @@ class Material extends MX_Controller
         $this->form_validation->set_rules('cmodel', 'Model', 'required');
         $this->form_validation->set_rules('cmaterial', 'Material', 'required');
         $this->form_validation->set_rules('tprice', 'Price', 'required|numeric');
+        $this->form_validation->set_rules('tweight', 'Weight', 'required|numeric');
+        $this->form_validation->set_rules('cgroup', 'Group', 'required|numeric');
 
         if ($this->form_validation->run($this) == TRUE)
         {
@@ -178,6 +180,8 @@ class Material extends MX_Controller
                            'color' => setnull($this->input->post('ccolor')),
                            'type' => setnull($this->input->post('ctype')),
                            'glass' => $this->input->post('cglass'),
+                           'weight' => $this->input->post('tweight'),
+                           'groups' => $this->input->post('cgroup'),
                            'created' => date('Y-m-d H:i:s'));
 
             $this->model->add($model);
@@ -194,13 +198,12 @@ class Material extends MX_Controller
     {        
         $category = $this->model->get_by_id($uid)->row();
 	$this->session->set_userdata('langid', $category->id);        
-        echo $uid.'|'.$category->name.'|'.$category->model.'|'.$category->material_list.'|'.$category->price.'|'.$category->color.'|'.$category->type.'|'.$category->glass;
+        echo $uid.'|'.$category->name.'|'.$category->model.'|'.$category->material_list.'|'.$category->price.'|'.$category->color.'|'.$category->type.'|'.$category->glass.'|'.$category->weight.'|'.$category->groups;
     }
-
 
     public function valid_model($name)
     {
-        if ($this->model->valid_material($name, $this->input->post('cmodel'), $this->input->post('cmaterial')) == FALSE)
+        if ($this->model->valid_material($this->input->post('ctype'), $this->input->post('ccolor'), $this->input->post('cmodel'), $this->input->post('cmaterial'), $this->input->post('cgroup')) == FALSE)
         {
             $this->form_validation->set_message('valid_model', "This $this->title is already registered.!");
             return FALSE;
@@ -211,7 +214,7 @@ class Material extends MX_Controller
     function validation_model($name)
     {
 	$id = $this->session->userdata('langid');
-	if ($this->model->validating_material($name,$this->input->post('cmodel'), $this->input->post('cmaterial'),$id) == FALSE)
+	if ($this->model->validating_material($this->input->post('ctype'), $this->input->post('ccolor'),$this->input->post('cmodel'), $this->input->post('cmaterial'),$this->input->post('cgroup'),$id) == FALSE)
         {
             $this->form_validation->set_message('validation_model', "This $this->title is already registered!");
             return FALSE;
@@ -229,6 +232,8 @@ class Material extends MX_Controller
         $this->form_validation->set_rules('cmodel', 'Model', 'required');
         $this->form_validation->set_rules('cmaterial', 'Material', 'required');
         $this->form_validation->set_rules('tprice', 'Price', 'required|numeric');
+        $this->form_validation->set_rules('tweight', 'Weight', 'required|numeric');
+        $this->form_validation->set_rules('cgroup', 'Group', 'required|numeric');
 
         if ($this->form_validation->run($this) == TRUE)
         {
@@ -239,6 +244,8 @@ class Material extends MX_Controller
                            'color' => setnull($this->input->post('ccolor')),
                            'type ' => setnull($this->input->post('ctype')),
                            'glass' => $this->input->post('cglass'),
+                           'weight' => $this->input->post('tweight'),
+                           'groups' => $this->input->post('cgroup'),
                            'updated' => date('Y-m-d H:i:s'));
             
 	    $this->model->update($this->session->userdata('langid'), $model);

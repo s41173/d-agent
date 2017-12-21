@@ -13,7 +13,7 @@ class Material_model extends Custom_Model
         $this->tableName = 'material';
     }
     
-    protected $field = array('id', 'name', 'model', 'material_list', 'price', 'color', 'type', 'glass', 'created', 'updated', 'deleted');
+    protected $field = array('id', 'name', 'model', 'material_list', 'price', 'color', 'type', 'glass', 'weight', 'groups', 'created', 'updated', 'deleted');
     protected $com;
     
     function get_last($limit)
@@ -50,21 +50,25 @@ class Material_model extends Custom_Model
         return $this->db->get(); 
     }
     
-    function valid_material($name,$model,$item)
+    function valid_material($type,$color,$model,$item, $group)
     {
-        $this->db->where('name', $name);
+        $this->db->where('color', $color);
+        $this->db->where('type', $type);
         $this->db->where('model', $model);
         $this->db->where('material_list', $item);
+        $this->db->where('groups', $group);
         $query = $this->db->get($this->tableName)->num_rows();
 
         if($query > 0){ return FALSE; }else{ return TRUE; }
     }
     
-    function validating_material($name,$model,$item,$id)
+    function validating_material($type,$color,$model,$item,$group,$id)
     {
-        $this->db->where('name', $name);
+        $this->db->where('color', $color);
+        $this->db->where('type', $type);
         $this->db->where('model', $model);
         $this->db->where('material_list', $item);
+        $this->db->where('groups', $group);
         $this->db->where_not_in('id', $id);
         $query = $this->db->get($this->tableName)->num_rows();
 

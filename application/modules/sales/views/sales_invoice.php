@@ -40,7 +40,6 @@
 		<img src="<?php echo base_url(); ?>images/property/kop-surat.png" alt="" style="min-height:120px; width:100%; margin:0; padding:0;">
 	</div>
 	
-
 <!-------------------->
 	<div class="row" style="text-align:left; float:left; margin-left:2%; width:96%;">
         
@@ -129,6 +128,8 @@ Bersama dengan surat ini, kami sampaikan penawaran produk DELICA ALUMUNIUM sesua
         
         foreach($items as $res){
 $attr = attribute($res->attribute);
+$price = intval($res->price*0.1);
+$price = intval($res->price-$price);
 echo "
 <tr>
 <td style=\"background-color: #dddddd;\">1</td>
@@ -138,8 +139,8 @@ echo "
 <td>".$attr[0]."</td>
 <td>".$attr[1]."</td>
 <td>".$res->qty."</td>
-<td> ".idr_format($res->price)." </td>
-<td>".idr_format($res->amount)."</td>
+<td> ".idr_format($price)." </td>
+<td>".idr_format($price*$res->qty)."</td>
 </tr>";
        $tot_qty = intval($tot_qty+$res->qty);
        $tot_amount = floatval($tot_amount+$res->amount);
@@ -156,8 +157,19 @@ echo "
                 
                 <tr>
 					<td colspan="4" style="background-color: #dddddd; text-align:right;"> Total : </td>
-<td colspan="3" style="text-align: right;background-color: #dddddd;"> <?php echo idr_format($total); ?>,- </td>
+<td colspan="3" style="text-align: right;background-color: #dddddd;"> <?php echo idr_format($total+$discount); ?>,- </td>
 				</tr>
+                
+                 <tr>
+					<td colspan="4" style="background-color: #dddddd; text-align:right;"> Discount : </td>
+<td colspan="3" style="text-align: right;background-color: #dddddd;"> <?php echo idr_format($discount); ?>,- </td>
+				</tr>
+                
+                 <tr>
+					<td colspan="4" style="background-color: #dddddd; text-align:right;"> Tax : </td>
+<td colspan="3" style="text-align: right;background-color: #dddddd;"> <?php echo idr_format($tax); ?>,- </td>
+				</tr>
+                
                 <tr>
 					<td colspan="4" style="background-color: #dddddd; text-align:right;"> Shipping + Landed Cost : </td>
 <td colspan="3" style="text-align: right;background-color: #dddddd;"> <?php echo $shipping; ?>,- </td>

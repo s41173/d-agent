@@ -9,7 +9,7 @@ class Agent extends MX_Controller
         $this->load->model('Agent_model', '', TRUE);
 
         $this->properti = $this->property->get();
-        $this->acl->otentikasi();
+//        $this->acl->otentikasi();
 
         $this->modul = $this->components->get(strtolower(get_class($this)));
         $this->title = strtolower(get_class($this));
@@ -17,15 +17,275 @@ class Agent extends MX_Controller
         $this->city = new City_lib();
         $this->disctrict = new District_lib();
         $this->sms = new Sms_lib();
+        $this->log = new Log_lib();
+        $this->login = new Agent_login_lib();
+        $this->customer = new Customer_lib();
+        $this->sales = new Sales_lib();
+        
+        header('Access-Control-Allow-Origin: *');
+        header('Access-Control-Allow-Methods: GET, POST, PATCH, PUT, DELETE, OPTIONS');
+        header('Access-Control-Allow-Headers: Origin, Content-Type, X-Auth-Token'); 
+        
     }
 
-    private $properti, $modul, $title, $customer, $city, $disctrict;
-    private $role, $sms;
+    private $properti, $modul, $title, $customer, $city, $disctrict, $sales;
+    private $role, $sms, $log, $login;
 
     function index()
     {
        $this->get_last(); 
     }
+    
+    // ajax
+    function get_pass(){ echo $this->random_password(); }
+    
+    // ------ json login -------------------
+    function login(){
+        
+        $datas = (array)json_decode(file_get_contents('php://input'));
+        $user = $datas['username'];
+        $pass = $datas['password'];
+        
+        $status = true;
+        $error = null;
+        $userid = null;
+        $logid = null;
+        
+        if ($user != null && $pass != null){
+            
+            $res = $this->Agent_model->login($user,$pass);
+            if ($res == FALSE){ $status = false; $error = 'Invalid Credential..!'; }
+            else{
+                
+                $logid = $this->random_password();
+                $res = $this->Agent_model->get_by_username($user)->row(); $userid = $res->id; 
+                $this->login->add($userid, $logid);
+            }
+            
+        }else{ $status = false; $error = "Wrong format..!!"; }
+        
+        $response = array('status' => $status, 'error' => $error, 'user' => $datas['username'], 'userid' => $userid, 'log' => $logid); 
+        $this->output
+        ->set_status_header(201)
+        ->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response))
+        ->_display();
+        exit;
+    }
+    
+    function forgot(){
+        
+        $datas = (array)json_decode(file_get_contents('php://input'));
+        $user = $datas['username'];
+        
+        $status = true;
+        $error = null;
+//        $user = 'info@dswip.com';
+        
+        if ($user != null){
+            
+            $res = $this->Agent_model->cek_user($user);
+            if ($res == TRUE){ 
+                $val = $this->Agent_model->get_by_username($user)->row();
+                if ($this->send_confirmation_email($val->id) == TRUE){ $status = true; }else{ $status = false; $error = 'Email Not Sent..!'; }
+            }else{ $status = false; $error = 'Invalid Agent Credential..!'; }
+            
+        }else{ $status = false; $error = "Wrong format..!!"; }
+        
+        $response = array('status' => $status, 'error' => $error, 'user' => $datas['username']); 
+        $this->output
+        ->set_status_header(201)
+        ->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response))
+        ->_display();
+        exit;
+    }
+    
+    function otentikasi(){
+       
+        $datas = (array)json_decode(file_get_contents('php://input'));
+        $user = $datas['userid'];
+        $log = $datas['log'];
+        
+        $status = true;
+        $error = null;
+        
+        if ( isset($datas['userid']) && isset($datas['log']) ){
+           if ( $this->login->valid($user, $log) == FALSE ){ $status = false; $error = "user already login..!!"; }      
+        }else{ $status = false; $error = "Wrong format..!!"; }
+        
+        $response = array('status' => $status, 'error' => $error); 
+        $this->output
+        ->set_status_header(201)
+        ->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response))
+        ->_display();
+        exit;
+    }
+    
+    function detail(){
+       
+        $datas = (array)json_decode(file_get_contents('php://input'));
+        $user = $datas['userid'];
+        
+        $status = true;
+        $error = null;
+        
+        if ( isset($datas['userid']) ){
+            
+        $res = $this->Agent_model->get_by_id($user)->row(); 
+        $output[] = array ("id" => $res->id, "code" => strtoupper($res->code), "name" => $res->name,
+                           "type" => $res->type, "address" => $res->address, "phone" => $res->phone1.' / '.$res->phone2,
+                           "fax" => $res->fax, "email" => $res->email, "state" => $res->state, "statename" => $this->disctrict->get_province($res->state),
+                           "city" => $res->city, "cityname" => $this->city->get_name($res->city),
+                           "region" => $res->region, "regionname" => $this->disctrict->get_name($res->region), 
+                           "zip" => $res->zip, "group" => $res->groups,
+                           "image" => base_url().'images/agent/'.$res->image);
+            
+           
+        }else{ $status = false; $error = "Wrong format..!!"; }
+        
+        $stts = array('status' => $status, 'error' => $error); 
+
+        $response['content'] = $output;
+        $response['status']  = $stts;
+            $this->output
+            ->set_status_header(200)
+            ->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($response,128))
+            ->_display();
+            exit; 
+    }
+    
+    function get_customer(){
+        
+        $datas = (array)json_decode(file_get_contents('php://input'));
+        $agent = $datas['agent_id'];
+        
+        $result = $this->customer->get_customer_by_agent($agent)->result();
+        
+        if ($result){
+	foreach($result as $res)
+	{
+	   $output[] = array ("id" => $res->id, "name" => $res->first_name, "email" => $res->email, "type" => $res->type, "phone" => $res->phone1.' / '.$res->phone2, "image" => base_url().'images/customer/'.$res->image);
+	}
+        $response['content'] = $output;
+            $this->output
+            ->set_status_header(200)
+            ->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($response,128))
+            ->_display();
+            exit; 
+        }   
+    }
+    
+    function get_customer_id(){
+        
+        $datas = (array)json_decode(file_get_contents('php://input'));
+        $uid = $datas['id'];
+        
+        $res = $this->customer->get_by_id($uid)->row();
+        
+	$output[] = array ("id" => $res->id, "name" => ucfirst($res->first_name), "last_name" => ucfirst($res->last_name), "type" => $res->type, "phone" => $res->phone1.' / '.$res->phone2, 
+                           "agent_id" => $res->agent_id, "address" => $res->address, "shipping_address" => $res->shipping_address, "email" => $res->email,
+                           "state" => $this->disctrict->get_province($res->state), "city" => $this->city->get_name($res->city), "cityid" => $res->city,
+                           "region" => $this->disctrict->get_name($res->region), "regionid" => $res->region, "zip" => $res->zip,
+                           "image" => base_url().'images/customer/'.$res->image);
+        
+        $response['content'] = $output;
+            $this->output
+            ->set_status_header(200)
+            ->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($response,128))
+            ->_display();
+            exit;    
+    }
+    
+    function add_customer(){
+        
+        $datax = (array)json_decode(file_get_contents('php://input')); 
+        
+        if ($this->customer->valid_customer($datax['email'], $datax['phone1'], $datax['phone2']) == TRUE){
+            
+            $customer = array('first_name' => strtolower($datax['fname']), 
+                          'last_name' => strtolower($datax['lname']), 'agent_id' => $datax['agent'],
+                          'type' => $datax['type'], 'address' => $datax['address'],
+                          'shipping_address' => $datax['ship_address'], 'phone1' => $datax['phone1'], 'phone2' => $datax['phone2'],
+                          'email' => $datax['email'], 'region' => $datax['region'],
+                          'city' => $datax['city'], 'state' => $this->city->get_province_based_city($datax['city']),
+                          'zip' => $datax['zip'], 'joined' => date('Y-m-d H:i:s'), 'status' => 1,
+                          'created' => date('Y-m-d H:i:s'));
+
+            $this->customer->add_customer($customer);
+            $response = array('status' => true, 'error' => 'One Customer Successfully Added..!'); 
+        }else{
+            $response = array('status' => false, 'error' => 'Invalid Customer, Email Or Phone Registered..!'); 
+        }
+        
+        $this->output
+        ->set_status_header(201)
+        ->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response))
+        ->_display();
+        exit;
+        
+    }
+    
+    function edit_customer(){
+        
+        $datax = (array)json_decode(file_get_contents('php://input')); 
+            
+        if ($datax['status'] == 'update'){
+            $customer = array('first_name' => strtolower($datax['fname']), 
+                          'last_name' => strtolower($datax['lname']), 'agent_id' => $datax['agent'],
+                          'type' => $datax['type'], 'address' => $datax['address'],
+                          'shipping_address' => $datax['ship_address'], 'phone1' => $datax['phone1'], 'phone2' => $datax['phone2'],
+                          'email' => $datax['email'], 'region' => $datax['region'],
+                          'city' => $datax['city'], 'state' => $this->city->get_province_based_city($datax['city']),
+                          'zip' => $datax['zip'], 'updated' => date('Y-m-d H:i:s'));
+        }else{
+            $customer = array('first_name' => strtolower($datax['fname']), 
+                          'last_name' => strtolower($datax['lname']), 'agent_id' => $datax['agent'],
+                          'type' => $datax['type'], 'address' => $datax['address'],
+                          'shipping_address' => $datax['ship_address'], 'phone1' => $datax['phone1'], 'phone2' => $datax['phone2'],
+                          'email' => $datax['email'],
+                          'zip' => $datax['zip'], 'updated' => date('Y-m-d H:i:s'));
+        }
+
+        $this->customer->edit_customer($customer,$datax['id']);
+        $response = array('status' => true, 'error' => 'One Customer Successfully Updated..!'); 
+        
+        $this->output
+        ->set_status_header(201)
+        ->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response))
+        ->_display();
+        exit;
+        
+    }
+    
+    function remove_customer(){
+        
+        $datax = (array)json_decode(file_get_contents('php://input')); 
+        
+        if ($this->sales->cek_customer($datax['id']) == TRUE){
+            
+            $this->customer->delete_customer($datax['id']);
+            $response = array('status' => true, 'error' => 'One Customer Successfully Removed..!'); 
+        }else{
+            $response = array('status' => false, 'error' => 'Customer Related To Sales Order..!'); 
+        }
+        
+        $this->output
+        ->set_status_header(201)
+        ->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response))
+        ->_display();
+        exit;
+        
+    }
+    
+    // api batas
      
     public function getdatatable($search=null,$cat='null',$publish='null')
     {
@@ -269,7 +529,7 @@ class Agent extends MX_Controller
                                   'email' => $this->input->post('temail'), 'password' => $this->random_password(),
                                   'website' => $this->input->post('twebsite'), 'region' => $this->input->post('cdistrict'),
                                   'city' => $this->input->post('ccity'), 'state' => $this->city->get_province_based_city($this->input->post('ccity')),
-                                  'zip' => $this->input->post('tzip'), 'joined' => date('Y-m-d H:i:s'),
+                                  'zip' => $this->input->post('tzip'), 'joined' => date('Y-m-d H:i:s'), 'groups' => $this->input->post('cgroup'),
                                   'acc_no' => $this->input->post('taccno'), 'acc_name' => $this->input->post('taccname'), 'acc_bank' => $this->input->post('tbank'),
                                   'image' => null, 'created' => date('Y-m-d H:i:s'));
             }
@@ -351,11 +611,14 @@ class Agent extends MX_Controller
         $data['default']['district'] = $customer->region;
         $data['default']['zip'] = $customer->zip;
         $data['default']['image'] = base_url().'images/agent/'.$customer->image;
+        $data['default']['pass'] = $customer->password;
         
         $data['bank'] = $customer->acc_bank;
         $data['default']['accno'] = $customer->acc_no;
         $data['default']['accname'] = $customer->acc_name;
 
+        $data['default']['group'] = $customer->groups;
+        
         $this->load->view('template', $data);
     }
     
@@ -612,10 +875,10 @@ class Agent extends MX_Controller
                                   'name' => strtolower($this->input->post('tname')),
                                   'type' => $this->input->post('ctype'), 'address' => $this->input->post('taddress'),
                                   'phone1' => $this->input->post('tphone1'), 'phone2' => $this->input->post('tphone2'),
-                                  'email' => $this->input->post('temail'),
+                                  'email' => $this->input->post('temail'), 'password' => $this->input->post('tpass'),
                                   'website' => $this->input->post('twebsite'), 'region' => $this->input->post('cdistrict'),
                                   'city' => $this->input->post('ccity'), 'state' => $this->city->get_province_based_city($this->input->post('ccity')),
-                                  'zip' => $this->input->post('tzip'),
+                                  'zip' => $this->input->post('tzip'), 'groups' => $this->input->post('cgroup'),
                                   'acc_no' => $this->input->post('taccno'), 'acc_name' => $this->input->post('taccname'), 'acc_bank' => $this->input->post('tbank'));
 
             }
@@ -630,7 +893,7 @@ class Agent extends MX_Controller
                                   'email' => $this->input->post('temail'),
                                   'website' => $this->input->post('twebsite'), 'region' => $this->input->post('cdistrict'),
                                   'city' => $this->input->post('ccity'), 'state' => $this->city->get_province_based_city($this->input->post('ccity')),
-                                  'zip' => $this->input->post('tzip'),
+                                  'zip' => $this->input->post('tzip'), 'groups' => $this->input->post('cgroup'),
                                   'acc_no' => $this->input->post('taccno'), 'acc_name' => $this->input->post('taccname'), 'acc_bank' => $this->input->post('tbank'),
                                   'image' => $info['file_name']);
             }

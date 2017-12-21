@@ -347,6 +347,42 @@ class Shipping extends MX_Controller
              $this->shiprate->get_city_name($shipping->dest).'|'.$shipping->dest_desc.'|'.$sales->code.'|'.$shipping->district;
     }
     
+    function send_invoice_email($param)
+    {   
+        // property display
+       $data['p_logo'] = $this->properti['logo'];
+       $data['p_name'] = $this->properti['name'];
+       $data['p_site_name'] = $this->properti['sitename'];
+       $data['p_address'] = $this->properti['address'];
+       $data['p_zip'] = $this->properti['zip'];
+       $data['p_city'] = $this->properti['city'];
+       $data['p_phone'] = $this->properti['phone1'];
+       $data['p_email'] = $this->properti['email'];
+       
+       $shipping = $this->Shipping_model->get_by_id($param)->row();
+       $sales = $this->sales->get_detail_sales($shipping->sales_id);
+       $customer = $this->customer->get_details($sales->cust_id)->row();
+         
+        // email send
+        $this->load->library('email');
+        $config['charset']  = 'utf-8';
+        $config['wordwrap'] = TRUE;
+        $config['mailtype'] = 'html';
+
+        $this->email->initialize($config);
+        $this->email->from($this->properti['email'], $this->properti['name']);
+        $this->email->to($customer->email);
+        $this->email->cc($this->properti['cc_email']); 
+        
+//        $html = $this->load->view('agent_confirmation',$data,true); 
+        $html = $this->invoice($param,'html');
+        
+        $this->email->subject('Shipping Confirmation - '.strtoupper($sales->code));
+        $this->email->message($html);
+
+        if (!$this->email->send()){ echo 'error|Failed to sent invoice..!!'; }else{ echo 'true|Invoice sent..!!';  }
+    }
+    
         // Fungsi update untuk menset texfield dengan nilai dari database
     function invoice($param=0,$type='invoice')
     {
@@ -402,7 +438,12 @@ class Shipping extends MX_Controller
 
             // transaction table
             $data['items'] = $this->sales->get_transaction_sales($shipping->sales_id)->result();
-            $this->load->view('shipping_invoice', $data);
+            
+             if ($type == 'invoice'){ $this->load->view('shipping_invoice', $data); }
+             else{
+                $html = $this->load->view('shipping_invoice', $data, true); // render the view into HTML
+                return $html;
+            }
         }
     }
     
@@ -505,80 +546,8 @@ class Shipping extends MX_Controller
         }else { echo "error|Sorry, you do not have the right to edit $this->title component..!"; } 
     }
     
-    function mail_invoice($pid,$type=null)
-    {   
-        // property display
-       $data['p_logo'] = $this->properti['logo'];
-       $data['p_name'] = $this->properti['name'];
-       $data['p_site_name'] = $this->properti['sitename'];
-       $data['p_address'] = $this->properti['address'];
-       $data['p_zip'] = $this->properti['zip'];
-       $data['p_city'] = $this->properti['city'];
-       $data['sites_url'] = constant("BASE_URL");
-       $data['p_phone']  = $this->properti['phone1'];
-       
-       $shipping = $this->Shipping_model->get_by_id($pid)->row();
-       $sales = $this->sales->get_detail_sales($shipping->sales_id);
-        
-       $data['title'] = $this->properti['name'].' | Invoice '.ucwords($this->modul['title']).' | SO-0'.$shipping->sales_id;
-        
-        if ($shipping != null && $shipping->shipdate != null){
-
-            // customer details
-            $customer = $this->customer->get_details($sales->cust_id)->row();
-            $data['c_name'] = strtoupper($customer->first_name.' '.$customer->last_name);
-            $data['c_email'] = $customer->email;
-            $data['c_address'] = $customer->shipping_address;
-            $data['c_phone'] = $customer->phone1.' / '.$customer->phone2;
-            $data['c_city'] = $this->city->get_name($customer->city);
-            $data['c_zip'] = $customer->zip;
-
-            // shipping
-            $data['so_no'] = 'DISO-0'.$shipping->sales_id;
-            $data['so_date'] = tglin($shipping->shipdate).' '. timein($shipping->shipdate);
-            $data['courier'] = strtoupper($shipping->courier);
-            $data['package'] = $shipping->package;
-            $data['awb'] = strtoupper($shipping->awb);
-            $data['rate'] = $shipping->rate;
-            $data['dest_desc'] = $shipping->dest_desc;
-            $data['dest'] = $shipping->dest;
-
-            $data['ship_address'] = $shipping->dest_desc;
-            $data['sub_total'] = num_format($sales->amount);
-            $data['shipping_amt'] = num_format($sales->shipping);
-            $data['total'] = num_format(floatval($sales->amount+$sales->shipping));
-
-            // weight total
-            $total = $this->sales->total($shipping->sales_id);
-            $data['weight'] = round($total['weight']);
-
-            // transaction table
-            $data['item'] = $this->sales->get_transaction_sales($shipping->sales_id)->result();
-            
-            $html = $this->load->view('shipping_order_email',$data,true);
-            $subject = 'Konfirmasi Pengiriman - '.$data['so_no'].' - '.$data['p_name'];
-            
-            // email send
-            $this->load->library('email');
-            $config['charset']  = 'utf-8';
-            $config['wordwrap'] = TRUE;
-            $config['mailtype'] = 'html';
     
-            $this->email->initialize($config);
-            $this->email->from($this->properti['billing_email'], $this->properti['name']);
-            $this->email->to($customer->email);
-            $this->email->cc($this->properti['cc_email']); 
     
-            $this->email->subject($subject);
-            $this->email->message($html);
-    //        $pdfFilePath = FCPATH."/downloads/".$no.".pdf";
-            
-            if ($type){ if (!$this->email->send()){ echo 'error|'.$this->email->print_debugger(); }else{ echo 'true|Shipping Confirmation Sent...!';  } }
-            else { if (!$this->email->send()){ return false; }else{ return true;  } }
-        }
-        else { echo 'error|Shipping Not Process...!!'; }
-       
-    }
     
     function valid_product($id,$sid)
     {

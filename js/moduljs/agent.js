@@ -114,6 +114,24 @@ $(document).ready(function (e) {
 			}   
 		);
 	});
+
+	$(document).on('click','#bgetpass',function(e)
+	{	
+		e.preventDefault();
+		var url = sites_ajax +"/get_pass";
+
+		// batas
+		$.ajax({
+			type: 'POST',
+			url: url,
+    	    cache: false,
+			headers: { "cache-control": "no-cache" },
+			success: function(result) {
+				$("#tpass").val(result);
+			}
+		})
+		return false;	
+	});
 	
 	
 	$('#searchform').submit(function() {

@@ -144,10 +144,9 @@ $(document).ready(function (e) {
 	
 	$('#searchform').submit(function() {
 		
-		var cat = $("#ccategory").val();
 		var type = $("#ctype").val();
 		var publish = $("#cpublish").val();
-		var param = ['searching',cat,type,publish];
+		var param = ['searching',type,publish];
 		
 		// alert(publish+" - "+dates);
 		
@@ -162,7 +161,6 @@ $(document).ready(function (e) {
 				
 				if (!param[1]){ param[1] = 'null'; }
 				if (!param[2]){ param[2] = 'null'; }
-				if (!param[3]){ param[3] = 'null'; }
 				load_data_search(param);
 			}
 		})
@@ -183,11 +181,9 @@ $(document).ready(function (e) {
 			var oTable = $('#datatable-buttons').dataTable();
 			var stts = 'btn btn-danger';
 			
-				console.log(source+"/"+search[0]+"/"+search[1]+"/"+search[2]+"/"+search[3]);
-			
 		    $.ajax({
 				type : 'GET',
-				url: source+"/"+search[0]+"/"+search[1]+"/"+search[2]+"/"+search[3]+"/",
+				url: source+"/"+search[0]+"/"+search[1]+"/"+search[2]+"/",
 				//force to handle it as text
 				contentType: "application/json",
 				dataType: "json",
@@ -205,7 +201,7 @@ $(document).ready(function (e) {
 						  oTable.fnAddData([
 '<input type="checkbox" name="cek[]" value="'+s[i][0]+'" id="cek'+i+'" style="margin:0px"  />',
 										i+1,
-										s[i][1],
+										s[i][2],
 										s[i][4],
 										s[i][6],
 										s[i][3],
@@ -258,7 +254,7 @@ $(document).ready(function (e) {
 						  oTable.fnAddData([
 '<input type="checkbox" name="cek[]" value="'+s[i][0]+'" id="cek'+i+'" style="margin:0px"  />',
 										i+1,
-										s[i][1],
+										s[i][2],
 										s[i][4],
 										s[i][6],
 										s[i][3],

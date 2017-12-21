@@ -137,7 +137,6 @@ class City_lib extends Main_model {
         return $data;
     }
     
-   
     function combo_city_name()
     {
         $json = $this->get_city();

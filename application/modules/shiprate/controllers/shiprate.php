@@ -9,13 +9,18 @@ class Shiprate extends MX_Controller
         $this->load->model('Shiprate_model', 'model', TRUE);
 
         $this->properti = $this->property->get();
-        $this->acl->otentikasi();
+//        $this->acl->otentikasi();
 
         $this->modul = $this->components->get(strtolower(get_class($this)));
         $this->title = strtolower(get_class($this));
         $this->city = new City_lib();
         $this->shiprate = new Shiprate_lib();
         $this->district = new District_lib();
+        
+        header('Access-Control-Allow-Origin: *');
+        header('Access-Control-Allow-Methods: GET, POST, PATCH, PUT, DELETE, OPTIONS');
+        header('Access-Control-Allow-Headers: Origin, Content-Type, X-Auth-Token'); 
+        
     }
 
     private $properti, $modul, $title, $city, $shiprate, $district;
@@ -29,16 +34,16 @@ class Shiprate extends MX_Controller
     function combo_district($city,$type=null)
     { $cityid = explode('|', $city); echo $this->city->combo_district_ajax($cityid[0],$type);  }
     
-    public function getdatatable($search=null,$city='null',$courier='null')
+    public function getdatatable($search=null,$source='null',$courier='null')
     {
         if(!$search){ $result = $this->model->get_last($this->modul['limit'])->result(); }
-        else { $result = $this->model->search($city,$courier)->result(); }
+        else { $result = $this->model->search($source,$courier)->result(); }
         
         if ($result){
 	foreach($result as $res)
 	{
 	   $output[] = array ($res->id, $res->courier, $res->city, strtolower($res->type), idr_format($res->rate),
-                              $res->district);
+                              $res->district, $this->city->get_name($res->source));
 	}
             $this->output
             ->set_status_header(200)
@@ -64,6 +69,7 @@ class Shiprate extends MX_Controller
 	// ---------------------------------------- //
         
         $data['city'] = $this->city->combo_city_combine();
+        $data['source_city'] = $this->city->combo_city_db();
         $data['city_name'] = $this->city->combo_city_name();
         $data['district'] = $this->city->combo_city_combine();
         $data['courrier'] = $this->shiprate->combo_courier();
@@ -81,7 +87,7 @@ class Shiprate extends MX_Controller
         $this->table->set_empty("&nbsp;");
 
         //Set heading untuk table
-        $this->table->set_heading('#','No', 'Courrier', 'Type', 'Destination', 'District', 'Rate', 'Action');
+        $this->table->set_heading('#','No', 'Courrier', 'Type', 'Source', 'Destination', 'District', 'Rate', 'Action');
 
         $data['table'] = $this->table->generate();
         $data['source'] = site_url('shiprate/getdatatable');
@@ -166,6 +172,7 @@ class Shiprate extends MX_Controller
 
 	// Form validation
         $this->form_validation->set_rules('ccity', 'City', 'required');
+        $this->form_validation->set_rules('csource', 'Source City', 'required');
         $this->form_validation->set_rules('cdistrict', 'District', 'required|callback_valid_district['.$this->input->post('ctype').']');
         $this->form_validation->set_rules('ccourrier', 'Courrier', '');
         $this->form_validation->set_rules('ctype', 'Rate Type', 'required');
@@ -178,7 +185,7 @@ class Shiprate extends MX_Controller
             
             $city = explode('|', $this->input->post('ccity'));
             
-            $shiprate = array('courier' => strtoupper($kurir),
+            $shiprate = array('courier' => strtoupper($kurir), 'source' => $this->input->post('csource'),
                               'city'   => $city[1],
                               'cityid' => $city[0],
                               'district' => $this->input->post('cdistrict'),
@@ -202,7 +209,7 @@ class Shiprate extends MX_Controller
         $shiprate = $this->model->get_by_id($uid)->row();
         $this->session->set_userdata('langid', $uid);    
         
-        echo $shiprate->id.'|'.$shiprate->courier.'|'.$shiprate->city.'|'.$shiprate->district.'|'.$shiprate->type.'|'.$shiprate->rate.'|'.$shiprate->cityid;
+        echo $shiprate->id.'|'.$shiprate->courier.'|'.$shiprate->city.'|'.$shiprate->district.'|'.$shiprate->type.'|'.$shiprate->rate.'|'.$shiprate->cityid.'|'.$shiprate->source;
     }    
 
     public function valid_district($district,$type)
@@ -240,6 +247,7 @@ class Shiprate extends MX_Controller
 
 	// Form validation
         $this->form_validation->set_rules('ccity', 'City', 'required');
+        $this->form_validation->set_rules('csource', 'Source City', 'required');
         $this->form_validation->set_rules('cdistrictupdate', 'District', 'required|callback_validating_district['.$this->input->post('ctype').']');
         $this->form_validation->set_rules('ccourrier', 'Courrier', '');
         $this->form_validation->set_rules('ctype', 'Rate Type', 'required');
@@ -251,7 +259,7 @@ class Shiprate extends MX_Controller
             else{ $kurir = $this->input->post('ccourrier'); }
      
             $city = explode('|', $this->input->post('ccity'));
-            $shiprate = array('courier' => strtoupper($kurir),
+            $shiprate = array('courier' => strtoupper($kurir), 'source' => $this->input->post('csource'),
                               'city'   => $city[1],
                               'cityid' => $city[0],
                               'district' => $this->input->post('cdistrictupdate'),

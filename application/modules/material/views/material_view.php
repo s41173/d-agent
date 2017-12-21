@@ -8,7 +8,7 @@
 <link href="<?php echo base_url(); ?>js/datatables/dataTables.tableTools.css" rel="stylesheet" type="text/css" />
 <link href="<?php echo base_url(); ?>css/icheck/flat/green.css" rel="stylesheet" type="text/css">
 
-<script src="<?php echo base_url(); ?>js/moduljs/material.js"></script>
+<script src="<?php echo base_url(); ?>js/moduljs/xmaterial.js"></script>
 <script src="<?php echo base_url(); ?>js-old/register.js"></script>
 
 <!--canvas js-->

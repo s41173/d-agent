@@ -65,6 +65,12 @@ class Sales_item_model extends Custom_Model
         $this->db->insert($this->tableName, $users);
     }
     
+    function update_trans($uid,$users)
+    {
+       $this->db->where('id', $uid);
+       $this->db->update($this->tableName, $users);
+    }
+    
     function valid_product($pid,$sid)
     {
        $this->db->where('product_id', $pid); 

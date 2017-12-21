@@ -64,6 +64,13 @@
           <input type="checkbox" name="cglass" class="" id="cglass_update" value="1">
       </div>
    </div>
+     
+    <div class="form-group">
+      <label for="middle-name" class="control-label col-md-3 col-sm-3 col-xs-12"> Thickness (mm) </label>
+      <div class="col-md-3 col-sm-6 col-xs-12">
+       <input type="number" name="tweight" id="tweight_update" class="form-control" value="0" step="0.01">
+      </div>
+    </div>
     
     <div class="form-group">
       <label for="middle-name" class="control-label col-md-3 col-sm-3 col-xs-12"> Price / M </label>
@@ -71,8 +78,21 @@
        <input type="number" id="tprice_update" name="tprice" class="form-control" value="0">
       </div>
     </div>
+     
+    <div class="form-group">
+        <label for="middle-name" class="control-label col-md-3 col-sm-3 col-xs-12"> Price / M </label>
+        <div class="col-md-3 col-sm-6 col-xs-12">
+        <select name="cgroup" id="cgroup_update" class="form-control" required title="Agent Group">
+          <option value=""> -- Group -- </option>
+<option value="1"<?php echo set_select('cgroup', '1', isset($default['group']) && $default['group'] == '1' ? TRUE : FALSE); ?>> Group 1 </option>
+<option value="2"<?php echo set_select('cgroup', '2', isset($default['group']) && $default['group'] == '2' ? TRUE : FALSE); ?>> Group 2 </option>
+<option value="3"<?php echo set_select('cgroup', '3', isset($default['group']) && $default['group'] == '3' ? TRUE : FALSE); ?>> Group 3 </option>
+<option value="4"<?php echo set_select('cgroup', '4', isset($default['group']) && $default['group'] == '4' ? TRUE : FALSE); ?>> Group 4 </option>
+<option value="5"<?php echo set_select('cgroup', '5', isset($default['group']) && $default['group'] == '5' ? TRUE : FALSE); ?>> Group 5 </option>
+        </select>
+        </div>
+    </div> 
  
-
       <div class="ln_solid"></div>
       <div class="form-group">
           <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3 btn-group">

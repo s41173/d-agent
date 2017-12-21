@@ -10,7 +10,7 @@ class Agent_lib extends Main_model {
 
     private $ci;
     
-    protected $field = array('id', 'code', 'name', 'type', 'address', 'phone1', 'phone2', 'fax', 'email', 'password',
+    protected $field = array('id', 'code', 'name', 'type', 'address', 'phone1', 'phone2', 'fax', 'email', 'password', 'groups',
                              'website', 'state', 'city', 'region', 'zip', 'notes', 'image', 'joined', 'acc_no', 'acc_name', 'acc_bank',
                              'status', 'created', 'updated', 'deleted');
        
@@ -59,11 +59,12 @@ class Agent_lib extends Main_model {
     {
         $this->db->select($this->field);
         $this->db->where('deleted', NULL);
+        $this->db->where('status', 1);
         $this->db->order_by('name', 'asc');
         $val = $this->db->get($this->tableName)->result();
         $data = null;
         if ($val){
-          foreach($val as $row){ $data['options'][$row->id] = ucfirst($row->name); }    
+          foreach($val as $row){ $data['options'][$row->id] = strtoupper($row->code); }    
         }else{ $data['options'][''] = '--'; }
         return $data;
     }

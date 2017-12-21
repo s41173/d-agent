@@ -55,12 +55,9 @@
            <!-- searching form -->
            
            <form id="searchform" class="form-inline">
-              <div class="form-group">
-                <?php $js = "class='select2_single form-control' id='ccategory' tabindex='-1' style='min-width:150px;' "; 
-			        echo form_dropdown('ccategory', $category, isset($default['category']) ? $default['category'] : '', $js); ?>
-              </div>
               
               <div class="form-group">
+                 <label> Type : </label> <br>
                  <select name="ctype" id="ctype" class="select2_single form-control" style="min-width:150px;">
                    <option value="email"> Email </option>
                    <option value="sms"> SMS </option>
@@ -68,18 +65,14 @@
               </div>
               
               <div class="form-group">
+                <label> Status : </label> <br>  
                 <select name="cpublish" id="cpublish" class="select2_single form-control" style="min-width:150px;">
                    <option value="1"> Publish </option>
                    <option value="0"> Unpublish </option>
                 </select>
               </div>
               
-<!--              <div class="form-group">
-              <input type="text" readonly style="width: 200px" name="reservation" id="d1" class="form-control active" value="">
-                 &nbsp; 
-              </div>-->
-              
-              <div class="form-group">
+              <div class="form-group btn-group"> <br>
                <button type="submit" class="btn btn-primary button_inline"> Filter </button>
                <button type="reset" onClick="" class="btn btn-success button_inline"> Clear </button>
                <button type="button" onClick="load_data();" class="btn btn-danger button_inline"> Reset </button>
@@ -105,42 +98,43 @@
           </form>       
              </div>
 
-               <!-- Trigger the modal with a button --> 
-     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">
-         <i class="fa fa-plus"></i>&nbsp;Add New 
-     </button>
-     
+     <div class="btn-group">
+     <!-- Trigger the modal with a button --> 
+         
+     <a href="<?php echo site_url('campaign/add'); ?>" class="btn btn-primary"> <i class="fa fa-plus"></i>&nbsp;Add New </a>
      <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal4"> Report  </button>
                
-               <!-- links -->
-	           <?php if (!empty($link)){foreach($link as $links){echo $links . '';}} ?>
-               <!-- links -->
+       <!-- links -->
+       <?php if (!empty($link)){foreach($link as $links){echo $links . '';}} ?>
+       <!-- links -->
+         
+     </div>
                              
             </div>
           </div>  
     
       <!-- Modal - Add Form -->
       <div class="modal fade" id="myModal" role="dialog">
-         <?php $this->load->view('campaign_form'); ?>      
+         <?php //$this->load->view('campaign_form'); ?>      
       </div>
       <!-- Modal - Add Form -->
               
       <!-- Modal Edit Form -->
       <div class="modal fade" id="myModal2" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-	     <?php $this->load->view('campaign_update'); ?> 
+	     <?php //$this->load->view('campaign_update'); ?> 
       </div>
       <!-- Modal Edit Form -->
               
        <!-- Modal Edit Form -->
       <div class="modal fade" id="myModal3" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-	     <?php $this->load->view('campaign_confirmation'); ?> 
+	     <?php //$this->load->view('campaign_confirmation'); ?> 
       </div>
       <!-- Modal Edit Form -->
       
       
       <!-- Modal - Report Form -->
       <div class="modal fade" id="myModal4" role="dialog">
-         <?php $this->load->view('campaign_report_panel'); ?>    
+         <?php //$this->load->view('campaign_report_panel'); ?>    
       </div>
       <!-- Modal - Report Form -->
       

@@ -20,16 +20,22 @@ class Sales_payment extends MX_Controller
         $this->customer = new Customer_lib();
         $this->payment = new Payment_lib();
         $this->bank = new Bank_lib();
+        $this->sms = new Sms_lib();
+        
+        header('Access-Control-Allow-Origin: *');
+        header('Access-Control-Allow-Methods: GET, POST, PATCH, PUT, DELETE, OPTIONS');
+        header('Access-Control-Allow-Headers: Origin, Content-Type, X-Auth-Token'); 
+        
     }
 
     private $properti, $modul, $title, $sales, $bank;
-    private $role, $currency, $payment;
+    private $role, $currency, $payment, $sms;
     
     function index()
     {
        $this->get_last(); 
     }
-    
+            
     // json function
     
     private function valid_json($param){
@@ -50,7 +56,7 @@ class Sales_payment extends MX_Controller
         if ($this->valid_json($datax) == TRUE && $sid != FALSE)
         {
             if ($this->valid_confirm($sid) == TRUE){
-                
+             
                 $orderid = $this->model->counter().mt_rand(100,9999);
                 
                 $sales = array('phase' => $datax['phase'], 'sales_id' => $sid,
@@ -61,6 +67,10 @@ class Sales_payment extends MX_Controller
                                'created' => date('Y-m-d H:i:s'));
             
                 $this->model->add($sales);
+                
+                $id = $this->model->counter(1);
+                $this->send_notif_backend($id);
+                $error = "Payment Confirmation Submitted..!!";
 
             }else{ $result = false; $error = 'Sales Order Not Confirmed..!';  }   
         }
@@ -75,6 +85,32 @@ class Sales_payment extends MX_Controller
             ->set_output(json_encode($response,128))
             ->_display();
             exit;  
+        
+    }
+    
+    private function send_notif_backend($uid=0){
+        
+        $val = $this->model->get_by_id($uid)->row();
+        $sales = $this->sales->get_by_id($val->sales_id)->row();
+        
+        // email send
+        $this->load->library('email');
+        $config['charset']  = 'utf-8';
+        $config['wordwrap'] = TRUE;
+        $config['mailtype'] = 'html';
+
+        $this->email->initialize($config);
+        $this->email->from($this->properti['email'], $this->properti['name']);
+        $this->email->to($this->properti['billing_email']);
+        $this->email->cc($this->properti['cc_email']); 
+        
+//        $html = $this->load->view('agent_confirmation',$data,true); 
+        $html = "Payment Confirmation - <strong> Sales Code : ".$sales->code." </strong> <br> Transcode : ".$val->code." <br> Transaction Date : ".tglincomplete($val->dates)." <br> Amount : Rp ". idr_format($val->amount);
+        
+        $this->email->subject('Notification - Payment Confirmation - #'.$sales->code);
+        $this->email->message($html);
+
+        if (!$this->email->send()){ return FALSE; }else{ return TRUE; }
         
     }
     
@@ -167,6 +203,8 @@ class Sales_payment extends MX_Controller
                                'updated' => date('Y-m-d H:i:s'));
             
                 $this->model->add($sales);
+                $id = $this->model->counter(1);
+                $this->send_notif_backend($id);
                 echo "true|One $this->title data payment successfully";
             }else{ echo "error|Sales Order Not Confirmed..!"; }   
         }
@@ -199,13 +237,103 @@ class Sales_payment extends MX_Controller
                            'amount' => $this->input->post('tamount'),
                            'bank_id' => $this->input->post('cbank'), 'confirmation' => $this->input->post('cstts'),
                            'updated' => date('Y-m-d H:i:s'));
-            
+                
+                if ($this->input->post('cstts') == 1){ $this->send_invoice_email($this->session->userdata('langid')); }
                 $this->model->update($this->session->userdata('langid'), $sales);
                 echo "true|One $this->title data payment successfully";
             }else{ echo "error|Sales Order Not Confirmed..!"; }   
         }
         else{ echo "error|".validation_errors(); }
         }else { echo "error|Sorry, you do not have the right to edit $this->title component..!"; }
+    }
+    
+    function send_invoice_email($param)
+    {   
+        // property display
+       $data['p_logo'] = $this->properti['logo'];
+       $data['p_name'] = $this->properti['name'];
+       $data['p_site_name'] = $this->properti['sitename'];
+       $data['p_address'] = $this->properti['address'];
+       $data['p_zip'] = $this->properti['zip'];
+       $data['p_city'] = $this->properti['city'];
+       $data['p_phone'] = $this->properti['phone1'];
+       $data['p_email'] = $this->properti['email'];
+       
+       $salespayment = $this->model->get_by_id($param)->row();
+       $sales = $this->sales->get_by_id($salespayment->sales_id)->row();
+       $customer = $this->customer->get_details($sales->cust_id)->row();
+         
+        // email send
+        $this->load->library('email');
+        $config['charset']  = 'utf-8';
+        $config['wordwrap'] = TRUE;
+        $config['mailtype'] = 'html';
+
+        $this->email->initialize($config);
+        $this->email->from($this->properti['email'], $this->properti['name']);
+        $this->email->to($customer->email);
+        $this->email->cc($this->properti['cc_email']); 
+        
+//        $html = $this->load->view('agent_confirmation',$data,true); 
+        $html = $this->invoice($param,'html');
+        
+        $this->email->subject('Payment Confirmation - #'.strtoupper($sales->code));
+        $this->email->message($html);
+
+        if (!$this->email->send()){ echo 'error|Failed to sent invoice..!!'; }else{ $this->send_confirmation_sms($param); echo 'true|Invoice sent..!!';  }
+    }
+    
+     private function send_confirmation_sms($param){
+       
+       $salespayment = $this->model->get_by_id($param)->row();
+       $sales = $this->sales->get_by_id($salespayment->sales_id)->row();
+       $customer = $this->customer->get_details($sales->cust_id)->row();
+        
+        $amount = idr_format($salespayment->amount);
+        $mess = "Konfirmasi pembayaran anda untuk tagihan #".$sales->code." sebesar ".$amount.",- sudah diterima. Mohon periksa email anda untuk informasi lebih lanjut.";
+        return $this->sms->send($customer->phone1, $mess);
+    }
+    
+    function invoice($param=0,$type='invoice')
+    {
+        $data['title'] = $this->properti['name'].' | Invoice '.ucwords($this->modul['title']).' | SO-0'.$param;
+        $salespayment = $this->model->get_by_id($param)->row();
+        $sales = $this->sales->get_by_id($salespayment->sales_id)->row();
+        
+        if ($sales){
+                
+            // property
+            $data['p_name'] = $this->properti['sitename'];
+            $data['p_address'] = $this->properti['address'];
+            $data['p_city'] = $this->properti['city'];
+            $data['p_zip']  = $this->properti['zip'];
+            $data['p_phone']  = $this->properti['phone1'];
+            $data['p_email']  = $this->properti['email'];
+            $data['p_logo']  = $this->properti['logo'];
+
+            // customer details
+            $customer = $this->customer->get_details($sales->cust_id)->row();
+            $data['c_name'] = strtoupper($customer->first_name.' '.$customer->last_name);
+
+            // sales
+            $data['so'] = $sales->code.'/'.get_month_romawi(date('m', strtotime($sales->dates))).'/'.date('Y', strtotime($sales->dates));
+            $data['socode'] = $sales->code;
+            $data['code'] = $salespayment->code;
+            $data['dates'] = tglincomplete($salespayment->dates);
+            $data['phase'] = $salespayment->phase;
+            $data['amount'] = idr_format($salespayment->amount);
+            $data['sender_name'] = strtoupper($salespayment->sender_name);
+            $data['sender_acc'] = $salespayment->sender_acc;
+            $data['sender_bank'] = $salespayment->sender_bank;
+            $data['bank'] = $this->bank->get_details($salespayment->bank_id,'acc_bank').' - '.$this->bank->get_details($salespayment->bank_id,'acc_no').' : '.$this->bank->get_details($salespayment->bank_id,'acc_name');
+
+
+            if ($type == 'invoice'){ $this->load->view('sales_confirmation_email', $data); }
+            else{
+                $html = $this->load->view('sales_confirmation_email', $data, true); // render the view into HTML
+                return $html;
+            }
+        }
     }
     
     function update($uid){

@@ -100,6 +100,7 @@ $(document).ready(function (e) {
 				$('#cdistrict_update_name').val(res[3]);
 				$('#ctype_update').val(res[4]).change();
 				$('#trate_update').val(res[5]);
+				$('#csource_update').val(res[7]).change();
 				$("#dbox_update").hide();
 			}
 		})
@@ -139,9 +140,9 @@ $(document).ready(function (e) {
 
 	$('#searchform').submit(function() {
 		
-		var city = $("#ccity_search").val();
+		var source = $("#csource_search").val();
 		var courier = $("#ccourrier_search").val();
-		var param = ['searching',city,courier];
+		var param = ['searching',source,courier];
 		
 		// alert(publish+" - "+dates);
 		
@@ -184,7 +185,7 @@ $(document).ready(function (e) {
 			var oTable = $('#datatable-buttons').dataTable();
 			var stts = 'btn btn-danger';
 			
-				// console.log(source+"/"+search[0]+"/"+search[1]+"/"+search[2]+"/"+search[3]);
+				console.log(source+"/"+search[0]+"/"+search[1]+"/"+search[2]+"/"+search[3]);
 			
 		    $.ajax({
 				type : 'GET',
@@ -208,9 +209,10 @@ $(document).ready(function (e) {
 						i+1,
 						s[i][1],
 						s[i][3],
+					    s[i][6],
 						s[i][2],
-						s[i][4],
 						s[i][5],
+						s[i][4],
 '<div class="btn-group" role"group">'+
 '<a href="" class="btn btn-primary btn-xs text-primary" id="' +s[i][0]+ '" title=""> <i class="fa fas-2x fa-edit"> </i> </a>'+
 '<a href="#" class="btn btn-danger btn-xs text-danger" id="'+s[i][0]+'" title="delete"> <i class="fa fas-2x fa-trash"> </i> </a>'+
@@ -258,6 +260,7 @@ $(document).ready(function (e) {
 										i+1,
 										s[i][1],
 										s[i][3],
+										s[i][6],
 										s[i][2],
 										s[i][5],
 										s[i][4],

@@ -204,14 +204,14 @@ class Category extends MX_Controller
                 $info['file_name'] = null;
                 $data['error'] = $this->upload->display_errors();
                 $category = array('name' => strtolower($this->input->post('tname')),
-                                  'parent_id' => $this->input->post('cparent'), 
+                                  'parent_id' => $this->input->post('cparent'), 'permalink' => split_space($this->input->post('tname')),
                                   'image' => null, 'created' => date('Y-m-d H:i:s'));
             }
             else
             {
                 $info = $this->upload->data();
                 $category = array('name' => strtolower($this->input->post('tname')),
-                                  'parent_id' => $this->input->post('cparent'), 
+                                  'parent_id' => $this->input->post('cparent'), 'permalink' => split_space($this->input->post('tname')),
                                   'image' => $info['file_name'], 'created' => date('Y-m-d H:i:s'));
             }
 
@@ -298,13 +298,13 @@ class Category extends MX_Controller
             if ( !$this->upload->do_upload("userfile_update")) // if upload failure
             {
                 $data['error'] = $this->upload->display_errors();
-                $category = array('name' => strtolower($this->input->post('tname_update')),'parent_id' => $this->input->post('cparent_update'));
+                $category = array('name' => strtolower($this->input->post('tname_update')),'parent_id' => $this->input->post('cparent_update'), 'permalink' => split_space($this->input->post('tname_update')));
                 $img = null;
             }
             else
             {
                 $info = $this->upload->data();
-                $category = array('name' => strtolower($this->input->post('tname_update')),'parent_id' => $this->input->post('cparent_update'), 'image' => $info['file_name']);
+                $category = array('name' => strtolower($this->input->post('tname_update')),'parent_id' => $this->input->post('cparent_update'), 'image' => $info['file_name'], 'permalink' => split_space($this->input->post('tname_update')));
                 $img = base_url().'images/category/'.$info['file_name'];
             }
 

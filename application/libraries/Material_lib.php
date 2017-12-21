@@ -11,8 +11,7 @@ class Material_lib extends Main_model {
 
     private $material;
     
-    protected $field = array('id', 'name', 'model', 'price', 'color', 'type', 'glass', 'created', 'updated', 'deleted');
-       
+    protected $field = array('id', 'name', 'model', 'price', 'color', 'type', 'glass', 'weight', 'groups', 'created', 'updated', 'deleted');
     
     function cek_relation($id,$type)
     {
@@ -49,21 +48,21 @@ class Material_lib extends Main_model {
         return $data;
     }
     
-    function get_price($pid,$material, $color=null, $type=null, $glassid=null){
+    function get_price($pid,$material, $color=null, $type=null, $glassid=null, $group=1){
         
-        $this->db->select('material.id, material.name, material.model, material.price, material.color, material.type, material.glass');
+        $this->db->select('material.id, material.name, material.model, material.price, material.color, material.type, material.glass, material.groups');
         $this->db->from($this->tableName);
         $this->db->where('material.material_list', $material);
         $result = $this->db->get();
         $result = $result->row();
         
         if ($result->glass != 1){
-            return $this->get_material_price($pid, $material, $color, $type);
-        }else{   return $this->get_glass($glassid,$type); }
+            return $this->get_material_price($pid, $material, $color, $type, $group);
+        }else{   return $this->get_glass($glassid,$type,$group); }
     }
     
     // get material price
-    private function get_material_price($pid,$material, $color=null, $type=null){
+    private function get_material_price($pid,$material, $color=null, $type=null, $group=null){
         
        $this->db->select('material.id, material.name, material.model, material.price, material.color, material.type, material.glass');
        
@@ -78,6 +77,7 @@ class Material_lib extends Main_model {
        
        $this->cek_null($color, 'material.color');
        $this->cek_null($type, 'material.type');
+       $this->cek_null($group, 'material.groups');
        
        $this->db->distinct();
        $result = $this->db->get();
@@ -86,7 +86,7 @@ class Material_lib extends Main_model {
        return @intval($result->price);
     }
     
-    private function get_glass($glassid=null, $type=null){
+    private function get_glass($glassid=null, $type=null, $group=null){
         
         $this->db->select('material.id, material.name, material.model, material.price, material.color, material.type, material.glass'); 
         $this->db->from($this->tableName);
@@ -115,6 +115,22 @@ class Material_lib extends Main_model {
           $data['options'][''] = '--';
         }
         return $data;
+    }
+    
+    function get_glass_weight($w=0,$h=0,$glass=0){
+        
+        $luas = intval($w*$h);
+        
+        $this->db->select($this->field);
+        $this->db->where('deleted', NULL);
+        $this->db->where('id', $glass);
+        $res = $this->db->get($this->tableName)->row();
+        $res = $res->weight/1000;
+        $vol = floatval($res*$luas);
+        $weight = round(floatval($vol * 2580));
+        
+        return $weight;
+//        Volume = 0,005m x 1m2 = 0,005m3 berat = 0,005m3 x 2579m3 = 12,895k
     }
 
 

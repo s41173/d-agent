@@ -9,14 +9,55 @@ class City extends MX_Controller
         $this->load->model('City_model', '', TRUE);
 
         $this->properti = $this->property->get();
-        $this->acl->otentikasi();
+//        $this->acl->otentikasi();
 
         $this->modul = $this->components->get(strtolower(get_class($this)));
         $this->title = strtolower(get_class($this));
+        
+        header('Access-Control-Allow-Origin: *');
+        header('Access-Control-Allow-Methods: GET, POST, PATCH, PUT, DELETE, OPTIONS');
+        header('Access-Control-Allow-Headers: Origin, Content-Type, X-Auth-Token'); 
 
     }
 
     private $properti, $modul, $title;
+    
+    // --- json -------
+    
+    function get_city(){
+        
+        $result = $this->City_model->get_kabupaten()->result();
+        
+        foreach($result as $res){
+            $output[] = array ("id" => $res->id, 'id_prov' => $res->id_prov, "nama" => $res->nama);
+        }
+        $response['content'] = $output;
+            $this->output
+            ->set_status_header(200)
+            ->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($response,128))
+            ->_display();
+            exit; 
+    }
+    
+    function get_district(){
+        
+        $datas = (array)json_decode(file_get_contents('php://input'));
+        $cityid = $datas['city'];
+        
+        $result = $this->City_model->get_kecamatan($cityid)->result();
+        
+        foreach($result as $res){
+            $output[] = array ("id" => $res->id, 'id_kabupaten' => $res->id_kabupaten, "nama" => $res->nama);
+        }
+        $response['content'] = $output;
+            $this->output
+            ->set_status_header(200)
+            ->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($response,128))
+            ->_display();
+            exit; 
+    }
 
     function index()
     {

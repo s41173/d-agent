@@ -32,6 +32,13 @@ class District_lib extends Main_model {
       if ($val){ return $val->nama; }else{ return null; }
     }
     
+    function get_province($id)
+    {
+      $this->db->where('id', $id);
+      $val = $this->db->get('provinsi')->row();   
+      if ($val){ return $val->nama; }else{ return null; }
+    }
+    
     function combo_district_ajax($city=null,$type=null)
     {
         $this->cek_null($city, 'id_kabupaten');

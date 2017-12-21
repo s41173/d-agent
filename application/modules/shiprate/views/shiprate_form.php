@@ -25,6 +25,14 @@
       action="<?php echo $form_action; ?>" >
      
     <div class="form-group">
+       <label class="control-label col-md-3 col-sm-3 col-xs-12" for="last-name"> City Source </label>
+       <div class="col-md-6 col-sm-6 col-xs-12">
+         <?php $js = "class='select2_single form-control' id='csource' tabindex='-1' style='width:330px; margin-bottom:15px;' "; 
+         echo form_dropdown('csource', $source_city, isset($default['source']) ? $default['source'] : '', $js); ?>
+       </div>
+    </div>
+    
+    <div class="form-group">
       <label for="middle-name" class="control-label col-md-3 col-sm-3 col-xs-12"> City / Region </label>
       <div class="col-md-8 col-sm-6 col-xs-12">
           

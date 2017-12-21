@@ -70,7 +70,7 @@
                <!-- links -->
 	           <?php if (!empty($link)){foreach($link as $links){echo $links . '';}} ?>
                <!-- links -->
-               
+               <a href="<?php echo site_url('error_log'); ?>" class="btn btn-warning"> Error Log </a>
                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal3"> Report  </button>
                              
             </div>

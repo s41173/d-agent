@@ -66,7 +66,7 @@ window.close();
 				res = data.split("|");
 				if (res[0] == "true")
 				{   
-                    $("#myModal").modal('show');
+                    $("#myModal").modal('hide');
 				    location.reload(true);
 				}
 				else{ swal(res[1], "", "error"); }

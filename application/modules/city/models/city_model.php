@@ -24,6 +24,23 @@ class City_model extends CI_Model
         return $this->db->get(); 
     }
     
+    function get_kabupaten()
+    {
+        $this->db->select('id, id_prov, nama');
+        $this->db->from('kabupaten'); 
+        $this->db->order_by('nama', 'asc'); 
+        return $this->db->get(); 
+    }
+    
+    function get_kecamatan($city)
+    {
+        $this->db->select('id, id_kabupaten, nama');
+        $this->db->from('kecamatan'); 
+        $this->db->where('id_kabupaten', $city);
+        $this->db->order_by('nama', 'asc'); 
+        return $this->db->get(); 
+    }
+    
     function delete($uid)
     {
         $this->db->where('id', $uid);

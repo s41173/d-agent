@@ -13,7 +13,7 @@ class Customer_model extends Custom_Model
         $this->tableName = 'customer';
     }
     
-    protected $field = array('id', 'first_name', 'last_name', 'type', 'address', 'shipping_address', 'phone1', 'phone2', 'joined',
+    protected $field = array('id', 'first_name', 'last_name', 'type', 'agent_id', 'address', 'shipping_address', 'phone1', 'phone2', 'joined',
                              'fax', 'email', 'password', 'website', 'state', 'city', 'region', 'zip', 'notes', 'image', 'status',
                              'created', 'updated', 'deleted');
     protected $com;

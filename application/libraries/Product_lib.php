@@ -8,7 +8,8 @@ class Product_lib extends Custom_Model {
         $this->tableName = 'product';
     }
 
-    protected $field = array('id', 'sku', 'category', 'assembly', 'name', 'model', 'description', 'bone', 'daun', 'daunhidup', 'kacamati', 
+    protected $field = array('id', 'sku', 'category', 'assembly', 'name', 'model', 'description', 
+                             'bone', 'daun', 'daunhidup', 'kacamati', 'weight',
                              'kacamati_bawah', 'tulang_daun', 'panel',
                              'image', 'color', 'url1', 'url2', 'url3', 'url4', 'url5', 'url6', 'flat_price', 'publish',
                              'created', 'updated', 'deleted');

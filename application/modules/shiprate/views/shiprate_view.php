@@ -44,11 +44,11 @@
           <!-- searching form -->
            
            <form id="searchform" class="form-inline">
-               
+  
   <div class="form-group">
-        <label> City / Region : </label> <br>
-        <?php $js = "class='select2_single form-control' id='ccity_search' tabindex='-1' style='width:300px;' "; 
-        echo form_dropdown('ccity', $city_name, isset($default['city']) ? $default['city'] : '', $js); ?>
+        <label> Source : </label> <br>
+        <?php $js = "class='select2_single form-control' id='csource_search' tabindex='-1' style='width:300px;' "; 
+        echo form_dropdown('csource', $source_city, isset($default['source']) ? $default['source'] : '', $js); ?>
   </div>
                
   <div class="form-group">

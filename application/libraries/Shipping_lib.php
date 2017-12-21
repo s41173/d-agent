@@ -10,7 +10,7 @@ class Shipping_lib extends Custom_Model {
 
     protected $field = array('id', 'sales_id', 'shipdate', 'courier', 'awb', 'origin', 'origin_id', 'origin_desc', 'dest',
                              'district', 'dest_desc', 'package', 'rate', 'weight', 'amount', 'status');
-
+    
     function cek_relation($id,$type)
     {
        $this->db->where($type, $id);

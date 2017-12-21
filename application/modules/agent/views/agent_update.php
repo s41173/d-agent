@@ -108,12 +108,24 @@
         value="<?php echo isset($default['phone1']) ? $default['phone1'] : '' ?>">
         <span class="fa fa-phone form-control-feedback left" aria-hidden="true"></span> 
       </div>
+                
 
       <div class="col-md-6 col-sm-6 col-xs-12 form-group has-feedback">
         <input type="text" class="form-control" id="tphone2" name="tphone2"
         value="<?php echo isset($default['phone2']) ? $default['phone2'] : '' ?>">
         <span class="fa fa-phone form-control-feedback right" aria-hidden="true"></span> 
       </div>
+        
+      <!-- password generator -->
+      <div class="col-md-6 col-sm-6 col-xs-12 form-group has-feedback">
+ <input type="text" class="form-control has-feedback-left" readonly id="tpass" name="tpass" style="width:200px; float:left; margin-right:10px;"
+        value="<?php echo isset($default['pass']) ? $default['pass'] : '' ?>">
+        
+        <button type="button" id="bgetpass" class="btn btn-default"> GET Password </button>  
+      </div>
+        
+      <div class="clear"></div>
+        
         
       <div class="form-group">
       <label class="control-label col-md-1 col-sm-1 col-xs-12"> Address : </label>
@@ -175,10 +187,21 @@ echo form_dropdown('cdistrict', $district, isset($default['district']) ? $defaul
     
 <!-- account -->
     
-      <div class="col-md-9 col-sm-9 col-xs-12 form-group has-feedback">
+      <div class="col-md-6 col-sm-6 col-xs-12 form-group has-feedback">
         <input type="file" id="uploadImage" accept="image/*" class="input-medium" title="Upload" name="userfile" /> <br>
         <img id="catimg" style=" max-width:100px; height:auto;" src="<?php echo isset($default['image']) ? $default['image'] : '' ?>">
       </div>
+        
+      <div class="col-md-6 col-sm-6 col-xs-12 form-group has-feedback">
+        <select name="cgroup" class="form-control" required title="Agent Group">
+          <option value=""> -- Group -- </option>
+<option value="1"<?php echo set_select('cgroup', '1', isset($default['group']) && $default['group'] == '1' ? TRUE : FALSE); ?>> Group 1 </option>
+<option value="2"<?php echo set_select('cgroup', '2', isset($default['group']) && $default['group'] == '2' ? TRUE : FALSE); ?>> Group 2 </option>
+<option value="3"<?php echo set_select('cgroup', '3', isset($default['group']) && $default['group'] == '3' ? TRUE : FALSE); ?>> Group 3 </option>
+<option value="4"<?php echo set_select('cgroup', '4', isset($default['group']) && $default['group'] == '4' ? TRUE : FALSE); ?>> Group 4 </option>
+<option value="5"<?php echo set_select('cgroup', '5', isset($default['group']) && $default['group'] == '5' ? TRUE : FALSE); ?>> Group 5 </option>
+        </select>
+      </div>    
       
       <!-- pembatas div -->
       <div class="col-md-6 col-sm-6 col-xs-12 form-group has-feedback">

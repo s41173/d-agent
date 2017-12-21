@@ -48,6 +48,12 @@ class Sales_payment_lib extends Custom_Model {
         $res = $this->db->get($this->tableName)->row_array();
         return floatval($res['amount']);
     }
+    
+    function delete_by_sales($sid)
+    {
+       $this->db->where('sales_id', $sid);
+       $this->db->delete($this->tableName);
+    }
   
 
 }

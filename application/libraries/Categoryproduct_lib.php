@@ -8,9 +8,11 @@ class Categoryproduct_lib extends Main_Model {
         $this->tableName = 'category';
     }
     
+    protected $field = array('id', 'name', 'parent_id', 'publish', 'image', 'permalink');
+    
     function get()
     {
-        $this->db->select('id, name, image');
+        $this->db->select($this->field);
         $this->db->where('deleted', NULL);
         $this->db->where('publish',1);
         $this->db->order_by('name', 'asc');
@@ -19,7 +21,7 @@ class Categoryproduct_lib extends Main_Model {
     
     function get_based_parent($parent=0)
     {
-        $this->db->select('id, name, image');
+        $this->db->select($this->field);
         $this->db->where('deleted', NULL);
         $this->db->where('publish',1);
         $this->db->where('parent_id',$parent);
@@ -29,7 +31,7 @@ class Categoryproduct_lib extends Main_Model {
 
     function combo()
     {
-        $this->db->select('id, name');
+        $this->db->select($this->field);
         $this->db->where('deleted', NULL);
         $this->db->where('publish',1);
 //        $this->db->where('parent_id >',0);
@@ -42,7 +44,7 @@ class Categoryproduct_lib extends Main_Model {
 
     function combo_all()
     {
-        $this->db->select('id, name');
+        $this->db->select($this->field);
         $this->db->where('deleted', NULL);
         $this->db->where('publish',1);
         $this->db->order_by('name', 'asc');
@@ -54,7 +56,7 @@ class Categoryproduct_lib extends Main_Model {
 
     function combo_update($id)
     {
-        $this->db->select('id, name');
+        $this->db->select($this->field);
         $this->db->where('deleted', NULL);
         $this->db->where('publish',1);
         $this->db->order_by('name', 'asc');
@@ -69,7 +71,7 @@ class Categoryproduct_lib extends Main_Model {
     {
         if ($id)
         {
-            $this->db->select('id,name');
+            $this->db->select($this->field);
             $this->db->where('id', $id);
             $val = $this->db->get($this->tableName)->row();
             if ($val){ return $val->name; }
@@ -82,7 +84,7 @@ class Categoryproduct_lib extends Main_Model {
     {
         if ($id)
         {
-            $this->db->select('id,name');
+            $this->db->select($this->field);
             $this->db->where('name', $id);
             $val = $this->db->get($this->tableName)->row();
             if ($val){ return $val->id; }else { return 0; }

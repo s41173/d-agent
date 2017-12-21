@@ -69,6 +69,14 @@ class Sales_lib extends Custom_Model {
            
         } 
     }
+    
+    function cek_customer($id)
+    {
+       $this->db->where('cust_id', $id);
+       $this->db->where('deleted', NULL);
+       $query = $this->db->get($this->tableName)->num_rows();
+       if ($query > 0) { return FALSE; } else { return TRUE; }
+    }
 
 }
 

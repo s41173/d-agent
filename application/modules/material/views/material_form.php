@@ -73,11 +73,31 @@
    </div>
     
      <div class="form-group">
+      <label for="middle-name" class="control-label col-md-3 col-sm-3 col-xs-12"> Thickness (mm) </label>
+      <div class="col-md-3 col-sm-6 col-xs-12">
+       <input type="number" name="tweight" class="form-control" value="0" step="0.01">
+      </div>
+    </div>
+    
+     <div class="form-group">
       <label for="middle-name" class="control-label col-md-3 col-sm-3 col-xs-12"> Price / M </label>
       <div class="col-md-3 col-sm-6 col-xs-12">
        <input type="number" name="tprice" class="form-control" value="0">
       </div>
     </div>
+    
+     <div class="form-group">
+      <label for="middle-name" class="control-label col-md-3 col-sm-3 col-xs-12"> Price Group </label>
+      <div class="col-md-3 col-sm-6 col-xs-12">
+        <select name="cgroup" class="form-control" required title="Agent Group">
+          <option value="1"> Group 1 </option>
+          <option value="2"> Group 2 </option>
+          <option value="3"> Group 3 </option>
+          <option value="4"> Group 4 </option>
+          <option value="5"> Group 5 </option>
+        </select>
+      </div>
+    </div>  
 
       <div class="ln_solid"></div>
       <div class="form-group">

@@ -13,7 +13,7 @@ class Shiprate_model extends Custom_Model
         $this->tableName = 'shiprate';
     }
     
-    protected $field = array('id', 'courier', 'city', 'cityid', 'district', 'type', 'rate', 'created', 'updated', 'deleted');
+    protected $field = array('id', 'courier', 'source', 'city', 'cityid', 'district', 'type', 'rate', 'created', 'updated', 'deleted');
     protected $com;
             
     function count_all_num_rows()
@@ -40,12 +40,12 @@ class Shiprate_model extends Custom_Model
         return $this->db->get(); 
     }
     
-    function search($city, $courier)
+    function search($source, $courier)
     {
         $this->db->select($this->field);
         $this->db->from($this->tableName); 
         $this->db->where('deleted', $this->deleted);
-        $this->cek_null_string($city, 'city');
+        $this->cek_null_string($source, 'source');
         $this->cek_null_string($courier, 'courier');
         return $this->db->get(); 
     }

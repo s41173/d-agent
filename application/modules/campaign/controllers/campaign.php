@@ -27,10 +27,10 @@ class Campaign extends MX_Controller
        $this->get_last(); 
     }
      
-    public function getdatatable($search=null,$cat='null',$type='null',$publish='null')
+    public function getdatatable($search=null,$type='null',$publish='null')
     {
         if(!$search){ $result = $this->Campaign_model->get_last($this->modul['limit'])->result(); }
-        else {$result = $this->Campaign_model->search($cat,$type,$publish)->result(); }
+        else {$result = $this->Campaign_model->search($type,$publish)->result(); }
 	
         $output = null;
         if ($result){
@@ -38,7 +38,7 @@ class Campaign extends MX_Controller
          foreach($result as $res)
 	 {             
 	   $output[] = array ($res->id, $res->email_from, $res->email_to, $res->type, $res->category, 
-                              $this->article->get_name($res->article_id), tglin($res->dates), $res->publish,
+                              $res->content, tglin($res->dates), $res->publish,
                               $res->created, $res->updated, $res->deleted
                              );
 	 } 
@@ -62,6 +62,26 @@ class Campaign extends MX_Controller
          
 //    =========================== ajax ==========================================
     
+    function add()
+    {
+
+        $data['title'] = $this->properti['name'].' | Administrator  '.ucwords($this->modul['title']);
+        $data['h2title'] = 'Create New '.$this->modul['title'];
+        $data['main_view'] = 'campaign_form';
+	$data['form_action'] = site_url($this->title.'/add_process');
+        $data['link'] = array('link_back' => anchor($this->title,'Back', array('class' => 'btn btn-danger')));
+
+        $data['language'] = $this->language->combo_all();
+        $data['email'] = $this->property->combo_email();
+        $data['email_all'] = $this->property->combo_email('param');
+        $data['source'] = site_url($this->title.'/getdatatable');
+        
+        $this->load->helper('editor');
+        editor();
+
+        $this->load->view('template', $data);
+    }  
+      
     function get_last()
     {
         $this->acl->otentikasi1($this->title);
@@ -96,7 +116,7 @@ class Campaign extends MX_Controller
         $this->table->set_empty("&nbsp;");
 
         //Set heading untuk table
-        $this->table->set_heading('#','No', 'From', 'Category', 'Date', 'Type', 'Subject', 'Action');
+        $this->table->set_heading('#','No', 'Target', 'Category', 'Date', 'Type', 'Subject', 'Action');
 
         $data['table'] = $this->table->generate();
         $data['source'] = site_url($this->title.'/getdatatable');
