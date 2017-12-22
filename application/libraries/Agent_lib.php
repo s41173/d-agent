@@ -68,6 +68,20 @@ class Agent_lib extends Main_model {
         }else{ $data['options'][''] = '--'; }
         return $data;
     }
+    
+    function combo_name()
+    {
+        $this->db->select($this->field);
+        $this->db->where('deleted', NULL);
+        $this->db->where('status', 1);
+        $this->db->order_by('name', 'asc');
+        $val = $this->db->get($this->tableName)->result();
+        $data = null;
+        if ($val){
+          foreach($val as $row){ $data['options'][$row->id] = strtoupper($row->code).' - '.strtoupper($row->name); }    
+        }else{ $data['options'][''] = '--'; }
+        return $data;
+    }
 
 
 }

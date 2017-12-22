@@ -8,7 +8,7 @@
 <link href="<?php echo base_url(); ?>js/datatables/dataTables.tableTools.css" rel="stylesheet" type="text/css" />
 <link href="<?php echo base_url(); ?>css/icheck/flat/green.css" rel="stylesheet" type="text/css">
 
-<script src="<?php echo base_url(); ?>js/moduljs/sales.js"></script>
+<script src="<?php echo base_url(); ?>js/moduljs/commision.js"></script>
 <script src="<?php echo base_url(); ?>js-old/register.js"></script>
 
 <!--canvas js-->
@@ -33,103 +33,25 @@
 
 <script type="text/javascript">
 
-	var sites_add  = "<?php echo site_url('sales/add_process/');?>";
-	var sites_edit = "<?php echo site_url('sales/update_process/');?>";
-	var sites_del  = "<?php echo site_url('sales/delete/');?>";
-	var sites_get  = "<?php echo site_url('sales/update/');?>";
-    var sites_confirmation  = "<?php echo site_url('sales_payment/get_last/');?>";
-    var sites_print_invoice  = "<?php echo site_url('sales/invoice/');?>";
-    var sites_primary   = "<?php echo site_url('sales/publish/');?>";
-	var sites_attribute = "<?php echo site_url('sales/attribute/');?>";
-    var sites_commision = "<?php echo site_url('commision/get_last/');?>";
+	var sites_add  = "<?php echo site_url('commision/add_process/');?>";
+	var sites_edit = "<?php echo site_url('commision/update_process/');?>";
+	var sites_del  = "<?php echo site_url('commision/delete/');?>";
+	var sites_get  = "<?php echo site_url('commision/update/');?>";
+    var sites_primary   = "<?php echo site_url('commision/publish/');?>";
 	var source = "<?php echo $source;?>";
-    
-    var url  = "<?php echo $graph;?>";
-	
-    $(document).ready(function (e) {
-    
-     //chart render
-	
-	$.getJSON(url, function (result) {
-		
-		var chart = new CanvasJS.Chart("chartcontainer", {
-
-			theme: "theme1",//theme1
-			axisY:{title: "", },
-  		    animationEnabled: true, 
-			data: [
-				{
-					type: "column",
-					dataPoints: result
-				}
-			]
-		});
-
-		chart.render();
-	});
-	
-	//chart render
         
-    // document ready end	
-    });
-    
 </script>
 
           <div class="row"> 
           
             <div class="col-md-12 col-sm-12 col-xs-12">
-                
-              <div class="x_panel">
-                    
-                   <!-- xtitle -->
-                      <div class="x_title">
-                       <h2> Sales Order Chart </h2>
-
-                        <ul class="nav navbar-right panel_toolbox">
-                          <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a> </li>
-                          <li><a class="close-link"><i class="fa fa-close"></i></a> </li>
-                        </ul>
-
-                        <div class="clearfix"></div>
-                      </div>
-                      <!-- xtitle -->
-
-        <div class="x_content">
-                        
-    <!-- chart form -->
-           
-       <form id="xsearchform" class="form-inline" method="post" action="<?php echo site_url('sales/get_last'); ?>">
-          <div class="form-group">
-            <label class="control-label labelx"> Periode : </label>  
-            <?php $js = "class='form-control' id='ccustomer' tabindex='-1' style='min-width:150px;' "; 
-                echo form_dropdown('cmonth', $month, isset($default['month']) ? $default['month'] : '', $js); ?>
-          </div>
-
-          <div class="form-group">
-            <input type="number" class="form-control" style="max-width:80px;" name="tyear" id="tyear" value="<?php echo $year; ?>">
-          </div>
-
-      <div class="form-group btn-group">
-       <button type="submit" class="btn btn-primary button_inline"> Filter </button>
-       <a href="<?php echo site_url('sales'); ?>" class="btn btn-success button_inline"> Reset </a>
-      </div>
-      </form> <br>
-
-  <!-- chart form -->
-                        
-            <div id="chartcontainer" style="height:250px; width:100%;"></div>
-        </div>    
-                    
-              </div>  
-                  
-              <!--  batas xtitle 2  -->    
-                
+                                
               <div class="x_panel" >
                    
               <!-- xtitle -->
               <div class="x_title">
                 
-               <h2> Sales Order Filter </h2>
+               <h2> Commision Order Filter </h2>
                 
                 <ul class="nav navbar-right panel_toolbox">
                   <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a> </li>
@@ -147,25 +69,10 @@
            <form id="searchform" class="form-inline">
              
              <div class="form-group">
-                <label class="control-label labelx"> Agent : </label> <br>  
-                <?php $js = "class='select2_single form-control' id='ccustomer_search' tabindex='-1' style='min-width:230px;' "; 
-			        echo form_dropdown('ccustomer', $agent, isset($default['customer']) ? $default['customer'] : '', $js); ?>
-                   &nbsp;
-              </div>
-                           
-              <div class="form-group">
-                <label class="control-label labelx"> Confirmation Status : </label> <br>    
-                <select name="cconfirm" id="cconfirm" class="form-control" style="min-width:150px;">
-                   <option value="" selected> -- </option>
-                   <option value="1"> Confirmed </option>
-                   <option value="0"> Unconfirmed </option>
-                </select> &nbsp;
-              </div>   
-              
-<!--          <div class="form-group">
-              <input type="text" readonly style="width: 200px" name="reservation" id="d1" class="form-control active" value="">
-                 &nbsp; 
-              </div>-->
+    <label class="control-label labelx"> Agent : </label> <br>  
+    <?php $js = "class='select2_single form-control' id='cagent_search' tabindex='-1' style='max-width:230px;' "; 
+	echo form_dropdown('cagent', $agent, isset($default['customer']) ? $default['customer'] : '', $js); ?>
+              </div>              
               
           <div class="form-group btn-group">
            <br>      
@@ -197,10 +104,8 @@
                   
          <div class="btn-group">
                <!-- Trigger the modal with a button  -->
-            <!-- <button type="button" onClick="resets();" class="btn btn-primary" data-toggle="modal" data-target="#myModal"> <i class="fa fa-plus"></i>&nbsp;Add New </button> -->
-<!--    <a class="btn btn-primary" href="<?php //echo site_url('sales/add'); ?>"> <i class="fa fa-plus"></i>&nbsp;Add New </a>-->
+             <button type="button" onClick="resets();" class="btn btn-primary" data-toggle="modal" data-target="#myModal"> <i class="fa fa-plus"></i>&nbsp;Add New </button> 
             <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal3"> Report  </button>
-            <a class="btn btn-success" href="<?php echo site_url('shipping'); ?>"> Shipping </a>
                
                <!-- links -->
 	           <?php if (!empty($link)){foreach($link as $links){echo $links . '';}} ?>
@@ -211,7 +116,7 @@
     
       <!-- Modal - Add Form -->
       <div class="modal fade" id="myModal" role="dialog">
-         <?php //$this->load->view('sales_confirmation'); ?>      
+         <?php $this->load->view('commision_form'); ?>      
       </div>
       <!-- Modal - Add Form -->
       
@@ -224,8 +129,8 @@
       
       
       <!-- Modal - Report Form -->
-      <div class="modal fade" id="myModal3" role="dialog">subl
-         <?php $this->load->view('sales_report_panel'); ?>    
+      <div class="modal fade" id="myModal3" role="dialog">
+         <?php $this->load->view('commision_report_panel'); ?>    
       </div>
       <!-- Modal - Report Form -->
       

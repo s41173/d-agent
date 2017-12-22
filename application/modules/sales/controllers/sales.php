@@ -94,6 +94,7 @@ class Sales extends MX_Controller
       { return TRUE; }else{ return FALSE; }
     }
     
+    // get weight based shopping cart
     function get_weight()
     {  
         $datax = (array)json_decode(file_get_contents('php://input'));         
@@ -105,6 +106,53 @@ class Sales extends MX_Controller
         $totweight = 0;
         
         $results = $cart->get_by_agent($agent)->result();
+        
+          foreach($results as $res){
+              
+              if ($this->product->valid_product($res->product_id)){
+                  
+                $qty = intval($res->qty);
+                $dimension = explode('|', $res->attribute);
+                                
+                $model = $this->product->get_detail_based_id($res->product_id);
+                
+                // get weight
+                $keliling = intval($dimension[0]*2) + intval($dimension[1]*2);
+                $weight = intval(intval($model->weight)*$keliling);
+                $weight = intval($qty*$weight);
+                
+                // get weight kaca
+                $weightglass = $this->material->get_glass_weight($dimension[0],$dimension[1],$dimension[6]);
+                $weightglass = intval($weightglass*$qty);
+                $totweight = floatval($totweight+$weight+$weightglass);
+                $margin = intval(0.1*$totweight);
+                $totweight = $totweight+$margin;
+                
+              }else { $result = false; $error = 'Invalid Product'; break; }
+          }
+        
+        $status = array('result' => $result, 'error' => $error, 'weight' => $totweight);
+        $response['status'] = $status;
+            
+        $this->output
+            ->set_status_header(200)
+            ->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($response,128))
+            ->_display();
+            exit;  
+    }
+    
+    // get weight based orderid
+    function get_weight_order()
+    {  
+        $datax = (array)json_decode(file_get_contents('php://input'));         
+        
+        $uid = $this->Sales_model->get_id_based_order($datax['orderid']);
+        $result = true;
+        $error = null;
+        $totweight = 0;
+        
+        $results = $this->sitem->get_last_item($uid)->result();
         
           foreach($results as $res){
               
@@ -207,6 +255,70 @@ class Sales extends MX_Controller
               }else { $result = false; $error = 'Invalid JSON Format'; break; }
           }
           
+          // add shipping
+          if ($result == true){ $this->shipping_json($datax); }
+          
+          // get discount status
+          $this->set_discount($orderid);
+          
+        }
+        else{ $result = false; $error = 'Invalid Orderid'; }
+        
+        $status = array('result' => $result, 'error' => $error);
+        $response['status'] = $status;
+            
+        $this->output
+            ->set_status_header(200)
+            ->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($response,128))
+            ->_display();
+            exit;  
+    }
+    
+    function revision_json()
+    {  
+        $datax = (array)json_decode(file_get_contents('php://input'));    
+ 
+        $orderid = $datax['status']->orderid;
+        $result = true;
+        $error = null;
+        
+        if ($this->cek_orderid($orderid) == TRUE && $this->valid_confirm($orderid,'code') == TRUE )
+        {  
+            $uid = $this->Sales_model->get_id_based_order($orderid);
+            $transaction = $this->sitem->get_last_item($uid)->result();
+            
+            foreach ($transaction as $res) {
+              
+              if ($this->product->valid_product($res->product_id) == TRUE){
+                                
+                $model = $this->product->get_detail_based_id($res->product_id);
+                $attr = explode('|', $res->attribute);
+                
+                // get weight
+                $keliling = intval($attr[0]*2) + intval($attr[1]*2);
+                $weight = intval($model->weight*$keliling);
+                $weight = intval($res->qty*$weight);
+                $vol = 0;
+                
+                // get weight kaca
+                $weightglass = $this->material->get_glass_weight($attr[0],$attr[1],$attr[6]);
+                $weightglass = intval($res->qty*$weightglass);
+                $totweight = floatval($weight+$weightglass);
+                
+                $margin = intval(0.1*$totweight);
+                $totweight = $totweight+$margin;
+                
+                $attr = $attr[0].'|'.$attr[1].'|'.$attr[2].'|'.$attr[3].'|'.$attr[4].'|'.
+                        $attr[5].'|'.$attr[6].'|'.$attr[7].'|'.$totweight.'|'.$vol;
+                
+                $item = array( 'attribute' => $attr);
+                $this->sitem->update_trans($res->id,$item);
+                
+                $this->update_trans($this->Sales_model->get_id_based_order($orderid));
+              }else { $result = false; $error = 'Invalid JSON Format'; break; }
+          }
+//          
           // add shipping
           if ($result == true){ $this->shipping_json($datax); }
           
@@ -503,7 +615,7 @@ class Sales extends MX_Controller
         
         $tot = $this->sitem->total($id);
         $tot = intval($tot['amount']);
-        if ($tot == 0){ $this->Sales_model->force_delete($id); }
+        if ($tot == 0){ $this->Sales_model->force_delete($id); $this->shipping->delete_by_sales($id); }
         
         $response = array('status' => true, 'reload' => true);
                 
