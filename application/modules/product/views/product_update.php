@@ -120,7 +120,8 @@
       <div class="form-group">  
           <label class="control-label col-md-3 col-sm-3 col-xs-12"> Flat-Price </label>  
           <div class="col-md-6 col-sm-12 col-xs-12 form-group">
-              <?php $js = "class='flat'"; echo form_checkbox('cflat', 1, set_value('cflat', isset($default['flat']) ? $default['flat'] : 'FALSE'), $js); ?> 
+              <?php $js = "class='flat'"; 
+              echo form_checkbox('cflat', 1, set_value('cflat', isset($default['flat']) ? $default['flat'] : 'FALSE'), $js); ?> 
           </div>
       </div>
         

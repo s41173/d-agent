@@ -51,7 +51,7 @@ class Customer_lib extends Main_model {
     
     function get_cust_type($type=null)
     {
-        $this->db->select('email');
+        $this->db->select($this->field);
         $this->db->where('type', $type);
         $this->db->where('status', 1);
         $this->db->where('deleted', $this->deleted);

@@ -53,6 +53,20 @@ class Campaign_model extends Custom_Model
         return $this->db->get(); 
     }
     
+    function combo()
+    {
+        $data = null;
+        $this->db->select($this->field);
+        $this->db->where('deleted', NULL);
+        $this->db->order_by('category', 'asc');
+        $val = $this->db->get($this->tableName)->result();
+        if ($val){
+            foreach($val as $row){ $data['options'][$row->category] = ucfirst($row->category); }
+        }else{ $data['options'][""] = "--"; }
+        
+        return $data;
+    }
+    
 }
 
 ?>

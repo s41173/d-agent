@@ -44,41 +44,15 @@ $(document).ready(function (e) {
 	load_data();  
 	
 	// batas dtatable
-	
-    // fungsi jquery update
+
+	// fungsi jquery update
 	$(document).on('click','.text-primary',function(e)
-	{	
-		e.preventDefault();
+	{	e.preventDefault();
 		var element = $(this);
 		var del_id = element.attr("id");
 		var url = sites_get +"/"+ del_id;
-		$(".error").fadeOut();
 		
-		$("#myModal2").modal('show');
-		// batas
-		$.ajax({
-			type: 'POST',
-			url: url,
-    	    cache: false,
-			headers: { "cache-control": "no-cache" },
-			success: function(result) {
-				
-				res = result.split("|");
-				var val = res[2].split(",");
-				
-				$("#tid_update").val(res[0]);
-				$("#cfrom_update").val(res[1]).change();
-				$("#cto_update").val(val).change();
-				
-				if (res[3] == 'email'){ $('#rtype1_update').prop('checked', true); }
-				else { $('#rtype2_update').prop('checked', true); }
-				
-				$("#ccategory_article_update").val(res[5]).change();
-				$("#carticle_update").val(res[6]).change();
-				$("#tsubject_update").val(res[9]);
-			}
-		})
-		return false;	
+		window.location.href = url;
 	});
 
 	// text-print
@@ -97,10 +71,9 @@ $(document).ready(function (e) {
 		e.preventDefault();
 		var element = $(this);
 		var del_id = element.attr("id");
-		var url = sites_get +"/"+ del_id;
+		var url = sites_primary +"/"+ del_id;
 		$(".error").fadeOut();
-		
-		$("#myModal3").modal('show');
+
 		// batas
 		$.ajax({
 			type: 'POST',
@@ -110,8 +83,11 @@ $(document).ready(function (e) {
 			success: function(result) {
 				
 				res = result.split("|");
-				$("#dtime1").val(res[7]);
-				$("#cstts").val(res[8]).change();
+				if (res[0] == 'true'){
+					error_mess(1,res[1],0);
+					load_data();
+				}else{ error_mess(3,res[1],0); load_data(); }
+				
 			}
 		})
 		return false;	
@@ -119,28 +95,21 @@ $(document).ready(function (e) {
 	
 
 	// fungsi ajax get article id
-	$(document).on('change','#ccategory_article,#ccategory_article_update',function(e)
+	$(document).on('change','#ctype',function(e)
 	{
 		e.preventDefault();
 		var value = $(this).val();
-		var url = sites_ajax+'/get_article_combo/'+value;
 
-		if (value){ 
-		    // batas
-			$.ajax({
-				type: 'POST',
-				url: url,
-	    	    cache: false,
-				headers: { "cache-control": "no-cache" },
-				success: function(result) {
-				  $("#carticlebox,#carticleboxupdate").html(result);
-				}
-			})
-			return false;
-
-		}else { swal('Error Load Data...!', "", "error"); }
+		if (value == "sms"){ 
+			$("#tsmsbox").show();
+			$("#tckbox").hide();
+		}else { 
+			$("#tsmsbox").hide();
+			$("#tckbox").show();
+		}
 
 	});
+
 	
 	$('#searchform').submit(function() {
 		
@@ -201,11 +170,11 @@ $(document).ready(function (e) {
 						  oTable.fnAddData([
 '<input type="checkbox" name="cek[]" value="'+s[i][0]+'" id="cek'+i+'" style="margin:0px"  />',
 										i+1,
+										s[i][1],
+										s[i][3],
+										s[i][6],
 										s[i][2],
 										s[i][4],
-										s[i][6],
-										s[i][3],
-										s[i][5],
 '<div class="btn-group" role"group">'+
 '<a href="" class="'+stts+' btn-xs primary_status" id="' +s[i][0]+ '" title="Confirmation Status"> <i class="fa fa-power-off"> </i> </a> '+
 '<a href="" class="btn btn-warning btn-xs text-print" id="' +s[i][0]+ '" title="Invoice Status"> <i class="fa fa-print"> </i> </a> '+
@@ -254,11 +223,11 @@ $(document).ready(function (e) {
 						  oTable.fnAddData([
 '<input type="checkbox" name="cek[]" value="'+s[i][0]+'" id="cek'+i+'" style="margin:0px"  />',
 										i+1,
+										s[i][1],
+										s[i][3],
+										s[i][6],
 										s[i][2],
 										s[i][4],
-										s[i][6],
-										s[i][3],
-										s[i][5],
 '<div class="btn-group" role"group">'+
 '<a href="" class="'+stts+' btn-xs primary_status" id="' +s[i][0]+ '" title="Confirmation Status"> <i class="fa fa-power-off"> </i> </a> '+
 '<a href="" class="btn btn-warning btn-xs text-print" id="' +s[i][0]+ '" title="Invoice Status"> <i class="fa fa-print"> </i> </a> '+

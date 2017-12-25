@@ -36,6 +36,37 @@ class Commision extends MX_Controller
     {
        redirect('sales');
     }
+    
+//    json process
+    function get_commision_json(){
+        
+        $datax = (array)json_decode(file_get_contents('php://input')); 
+        
+        $output = null;
+        $result = $this->model->search_json($datax['agent_id'])->result();
+        
+        foreach ($result as $res){
+            
+           $sales = $this->sales->get_detail_sales($res->sales_id);  
+	   $output[] = array ("id" => $res->id, "sales_id" => $res->sales_id, "sales_code" => $sales->code, "code" => $res->code,
+                              "dates" => tglin($res->dates), "phase" => $res->phase,  "amount" => idr_format($res->amount),
+                              "payment" => $this->payment->get_name($res->payment_id), "bank" => $this->bank->get_details($res->bank_id, 'acc_name').' - '.$this->bank->get_details($res->bank_id, 'acc_no'), 
+                              "confirmation" => $res->confirmation, "agent" => $this->agent->get_name($sales->agent_id)
+                             );
+            
+        }
+                
+        $response['content'] = $output;
+        
+        $this->output
+        ->set_status_header(201)
+        ->set_content_type('application/json', 'utf-8')
+        ->set_output(json_encode($response, 128))
+        ->_display();
+        exit;
+        
+    }
+    
      
     public function getdatatable($search=null,$agent='null')
     {

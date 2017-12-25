@@ -131,8 +131,12 @@
       <div class="form-group">
         <label class="control-label col-md-3 col-sm-3 col-xs-12"> Recipient </label>
         <div class="col-md-4 col-sm-4 col-xs-12">
-           <input type="checkbox" class="flat" name="ctocustomer" value="customer" checked> Customer
-           <input type="checkbox" class="flat" name="ctoagent" value="agent" checked> Agent
+            <table>
+                <tr> 
+ <td> <input type="checkbox" class="form-control" name="ctocustomer" value="customer" <?php echo $default['customer']; ?> > Customer &nbsp; &nbsp; </td>
+ <td> <input type="checkbox" class="form-control" name="ctoagent" value="agent" <?php echo $default['agent']; ?> > Agent </td>
+                </tr>
+            </table>
         </div>
       </div> 
             
@@ -141,7 +145,7 @@
             <div id="tckbox">
                 <?php echo $this->ckeditor->editor('tdescemail', isset($default['desc']) ? $default['desc'] : ''); ?> 
             </div>
-<div id="tsmsbox" style="display:none;"> <textarea style="width:100%;" name="tdesc" cols="60" rows="2"></textarea> </div>
+<div id="tsmsbox" style="display:none;"> <textarea style="width:100%;" name="tdesc" cols="60" rows="2"><?php echo isset($default['desc']) ? $default['desc'] : ''; ?></textarea> </div>
         </div>
       </div>
       
@@ -199,5 +203,4 @@
       });
     </script>
     <!-- /jQuery Smart Wizard -->
-    
     

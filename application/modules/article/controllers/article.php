@@ -170,6 +170,7 @@ class Article extends MX_Controller
 
             $data['title'] = $this->properti['name'].' | Administrator  '.ucwords('Article Manager');
             $data['h2title'] = 'Article Manager';
+            $data['main_view'] = 'article_form';
             $data['form_action'] = site_url($this->title.'/add_process');
             $data['link'] = array('link_back' => anchor('admin/','<span>back</span>', array('class' => 'back')));
 

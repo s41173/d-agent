@@ -39,10 +39,9 @@ class Agent_lib extends Main_model {
         else { return 0; }
     }
     
-    function get_cust_type($type=null)
+    function get_agent_type()
     {
         $this->db->select($this->field);
-        $this->db->where('type', $type);
         $this->db->where('status', 1);
         $this->db->where('deleted', $this->deleted);
         $val = $this->db->get($this->tableName)->result();

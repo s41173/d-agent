@@ -8,7 +8,7 @@
 <link href="<?php echo base_url(); ?>js/datatables/dataTables.tableTools.css" rel="stylesheet" type="text/css" />
 <link href="<?php echo base_url(); ?>css/icheck/flat/green.css" rel="stylesheet" type="text/css">
 
-<script src="<?php echo base_url(); ?>js/moduljs/campaign.js"></script>
+<script src="<?php echo base_url(); ?>js/moduljs/xcampaign.js"></script>
 <script src="<?php echo base_url(); ?>js-old/register.js"></script>
 
 <!-- Date time picker -->
@@ -26,7 +26,7 @@
 	var sites_del  = "<?php echo site_url('campaign/delete/');?>";
 	var sites_get  = "<?php echo site_url('campaign/update/');?>";
     var sites_ajax  = "<?php echo site_url('campaign');?>";
-    var sites_primary  = "<?php echo site_url('campaign/publish/');?>";
+    var sites_primary  = "<?php echo site_url('campaign/confirmation/');?>";
 	var source = "<?php echo $source;?>";
 	
 </script>
@@ -102,7 +102,6 @@
      <!-- Trigger the modal with a button --> 
          
      <a href="<?php echo site_url('campaign/add'); ?>" class="btn btn-primary"> <i class="fa fa-plus"></i>&nbsp;Add New </a>
-     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal4"> Report  </button>
                
        <!-- links -->
        <?php if (!empty($link)){foreach($link as $links){echo $links . '';}} ?>

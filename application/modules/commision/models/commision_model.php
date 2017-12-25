@@ -40,6 +40,19 @@ class Commision_model extends Custom_Model
         return $this->db->get(); 
     }
     
+    function search_json($agent=null)
+    {   
+        $this->db->select($this->field);
+        $this->db->from('sales, commision');
+        $this->db->where('sales.id = commision.sales_id');
+        
+        $this->db->where('commision.deleted', $this->deleted);
+        $this->cek_null_string($agent, 'sales.agent_id');
+        $this->db->where('commision.confirmation', 1);
+        $this->db->order_by('commision.dates', 'desc'); 
+        return $this->db->get(); 
+    }
+    
     function report($start=null,$end=null)
     {   
         $this->db->select($this->field);

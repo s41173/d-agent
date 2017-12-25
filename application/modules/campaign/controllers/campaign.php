@@ -16,11 +16,12 @@ class Campaign extends MX_Controller
         $this->role = new Role_lib();
         $this->language = new Language_lib();
         $this->customer = new Customer_lib();
-        $this->subscriber = new Subscriber_lib();
+        $this->agent = new Agent_lib();
+        $this->sms = new Sms_lib();
     }
 
-    private $properti, $modul, $title, $article;
-    private $role, $category, $language, $customer,$subscriber;
+    private $properti, $modul, $title, $article, $sms;
+    private $role, $category, $language, $customer,$agent;
 
     function index()
     {
@@ -37,7 +38,7 @@ class Campaign extends MX_Controller
                 
          foreach($result as $res)
 	 {             
-	   $output[] = array ($res->id, $res->email_from, $res->email_to, $res->type, $res->category, 
+	   $output[] = array ($res->id, $res->email_to, $res->type, $res->category, $res->subject, 
                               $res->content, tglin($res->dates), $res->publish,
                               $res->created, $res->updated, $res->deleted
                              );
@@ -52,16 +53,7 @@ class Campaign extends MX_Controller
         }
     }
     
-//    =========================== ajax ==========================================
-      function get_article_combo($category)
-      {
-          $combo = $this->article->combo_category($category);
-          $js = "class='form-control' id='carticle' tabindex='-1' style='width:100%;' "; 
-          echo form_dropdown('carticle', $combo, isset($default['article']) ? $default['article'] : '', $js);
-      }
-         
-//    =========================== ajax ==========================================
-    
+     
     function add()
     {
 
@@ -75,6 +67,7 @@ class Campaign extends MX_Controller
         $data['email'] = $this->property->combo_email();
         $data['email_all'] = $this->property->combo_email('param');
         $data['source'] = site_url($this->title.'/getdatatable');
+        $data['category'] = $this->Campaign_model->combo();
         
         $this->load->helper('editor');
         editor();
@@ -187,31 +180,43 @@ class Campaign extends MX_Controller
             $data['link'] = array('link_back' => anchor('admin/','<span>back</span>', array('class' => 'back')));
 
             // Form validation
-            $this->form_validation->set_rules('cfrom', 'Email-From', 'required');
-            $this->form_validation->set_rules('cto', 'Target', 'required');
-            $this->form_validation->set_rules('rtype', 'Campaign Type', 'required');
-            $this->form_validation->set_rules('ccategory', 'Article Category', 'required');
-            $this->form_validation->set_rules('carticle', 'Article', 'required');
-            $this->form_validation->set_rules('tsubject', 'Subject', 'required');
+            $this->form_validation->set_rules('ctocustomer', 'Customer Recipient', 'callback_valid_recipient['.$this->input->post('ctoagent').']');
+            $this->form_validation->set_rules('ctoagent', 'Agent Recipient', '');
+            $this->form_validation->set_rules('ccategory', 'Article Category', 'callback_valid_category['.$this->input->post('tcategory').']');
+            $this->form_validation->set_rules('tdesc', 'Article Content', '');
+            $this->form_validation->set_rules('ttitle', 'Subject', 'required');
 
             if ($this->form_validation->run($this) == TRUE)
             {  
+                if ($this->input->post('ctocustomer') != "" && $this->input->post('ctoagent') != ""){ 
+                    $reicipt = $this->input->post('ctocustomer').','.$this->input->post('ctoagent');
+                }elseif ( $this->input->post('ctocustomer') != "" && $this->input->post('ctoagent') == "" ){
+                    $reicipt = $this->input->post('ctocustomer');
+                }elseif ( $this->input->post('ctoagent') == "" ){ $reicipt = $this->input->post('ctoagent'); }
+                
+                if ($this->input->post('tcategory') != ""){ $category = $this->input->post('tcategory'); }else{
+                    $category = $this->input->post('ccategory');
+                }
+                
+                if ($this->input->post('ctype') == 'sms'){ $content = $this->input->post('tdesc'); }else{ $content = $this->input->post('tdescemail'); }
+                
                 $campaign = array(
-                'email_from' => $this->input->post('cfrom'),
-                'email_to' => $this->split_array($this->input->post('cto')),
-                'type' => $this->input->post('rtype'),
-                'subject' => $this->input->post('tsubject'),
-                'category' => strtolower($this->category->get_name($this->input->post('ccategory'))),
-                'article_id' => $this->input->post('carticle'), 
+                'email_to' => $reicipt,
+                'type' => $this->input->post('ctype'),
+                'subject' => $this->input->post('ttitle'),
+                'category' => $category,
+                'content' => $content,
+                'dates' => $this->input->post('tdates'), 
                 'created' => date('Y-m-d H:i:s'));
 
                 $this->Campaign_model->add($campaign);
                 $this->session->set_flashdata('message', "One $this->title data successfully saved!");
-                echo 'true|Data successfully saved..!|';
+//                echo 'true|Data successfully saved..!|';
             }
-            else{  echo 'error|'.validation_errors(); }
+            else{  $this->session->set_flashdata('message', validation_errors()); }
         }
         else { echo "error|Sorry, you do not have the right to edit $this->title component..!"; }
+        redirect($this->title.'/add/');
     }
     
     private function cek_tick($val)
@@ -233,12 +238,59 @@ class Campaign extends MX_Controller
     // Fungsi update untuk menset texfield dengan nilai dari database
     function update($uid=null)
     {        
-        $campaign = $this->Campaign_model->get_by_id($uid)->row();
-        $this->session->set_userdata('langid', $campaign->id);
+        $data['title'] = $this->properti['name'].' | Administrator  '.ucwords($this->modul['title']);
+        $data['h2title'] = 'Edit '.$this->modul['title'];
+        $data['main_view'] = 'campaign_update';
+	$data['form_action'] = site_url($this->title.'/update_process');
+        $data['link'] = array('link_back' => anchor($this->title,'Back', array('class' => 'btn btn-danger')));
+
+        $data['language'] = $this->language->combo_all();
+        $data['email'] = $this->property->combo_email();
+        $data['email_all'] = $this->property->combo_email('param');
+        $data['source'] = site_url($this->title.'/getdatatable');
+        $data['category'] = $this->Campaign_model->combo();
         
-        echo $campaign->id.'|'.$campaign->email_from.'|'.$campaign->email_to.'|'.$campaign->type.'|'.$campaign->category.'|'.
-        strtolower($this->category->get_id($campaign->category)).'|'.$campaign->article_id.'|'.$campaign->dates.'|'.$campaign->publish.'|'.
-        $campaign->subject;
+        $campaign = $this->Campaign_model->get_by_id($uid)->row();
+	$this->session->set_userdata('langid', $campaign->id);
+        
+        $data['default']['title'] = $campaign->subject;
+        $data['default']['date'] = $campaign->dates;
+        $data['default']['type'] = $campaign->type;
+        $data['default']['category'] = $campaign->category;
+        
+        $val1=''; $val2='';
+        $to = explode(',', $campaign->email_to);
+        if ($to[0] == 'agent'){ $val1 = 'checked'; }elseif($to[0] == 'customer'){ $val2 = 'checked'; }
+        if (isset($to[1]) && $to[1] == 'customer'){ $val2 = 'checked'; }elseif(isset($to[1]) && $to[1] == 'agent'){ $val1 = 'checked'; }
+        
+        $data['default']['agent'] = $val1;
+        $data['default']['customer'] = $val2;
+        $data['default']['desc'] = $campaign->content;
+        
+        $this->load->helper('editor');
+        editor();
+        
+        $this->load->view('template', $data);
+    }
+    
+    function valid_recipient($tocusomer,$toagent)
+    {
+        if ( $tocusomer == "" && $toagent == "" )
+        {
+            $this->form_validation->set_message('valid_recipient', 'Recipient required..!!');
+            return FALSE;
+        }
+        else{ return TRUE;  }
+    }
+    
+    function valid_category($ccat,$tcat)
+    {
+        if ( $ccat == "" && $tcat == "" )
+        {
+            $this->form_validation->set_message('valid_category', 'Category required..!!');
+            return FALSE;
+        }
+        else{ return TRUE;  }
     }
  
     function valid($val)
@@ -274,87 +326,113 @@ class Campaign extends MX_Controller
 	$data['link'] = array('link_back' => anchor('admin/','<span>back</span>', array('class' => 'back')));
 
 	// Form validation
-        $this->form_validation->set_rules('cfrom', 'Email-From', 'required');
-        $this->form_validation->set_rules('cto', 'Target', 'required');
-        $this->form_validation->set_rules('rtype', 'Campaign Type', 'required');
-        $this->form_validation->set_rules('ccategory', 'Article Category', 'required');
-        $this->form_validation->set_rules('carticle', 'Article', 'required');
+        $this->form_validation->set_rules('ctocustomer', 'Customer Recipient', 'callback_valid_recipient['.$this->input->post('ctoagent').']');
+        $this->form_validation->set_rules('ctoagent', 'Agent Recipient', '');
+        $this->form_validation->set_rules('ccategory', 'Article Category', 'callback_valid_category['.$this->input->post('tcategory').']');
+        $this->form_validation->set_rules('tdesc', 'Article Content', '');
+        $this->form_validation->set_rules('ttitle', 'Subject', 'required');
 
         if ($this->form_validation->run($this) == TRUE)
         {
+            if ($this->input->post('ctocustomer') != "" && $this->input->post('ctoagent') != ""){ 
+                $reicipt = $this->input->post('ctocustomer').','.$this->input->post('ctoagent');
+            }elseif ( $this->input->post('ctocustomer') != "" && $this->input->post('ctoagent') == "" ){
+                $reicipt = $this->input->post('ctocustomer');
+            }elseif ( $this->input->post('ctoagent') != "" && $this->input->post('ctocustomer') == "" ){ $reicipt = $this->input->post('ctoagent'); }
+
+            if ($this->input->post('tcategory') != ""){ $category = $this->input->post('tcategory'); }else{
+                $category = $this->input->post('ccategory');
+            }
+                
+            if ($this->input->post('ctype') == 'sms'){ $content = $this->input->post('tdesc'); }else{ $content = $this->input->post('tdescemail'); }
+            
             $campaign = array(
-                'email_from' => $this->input->post('cfrom'),
-                'email_to' => $this->split_array($this->input->post('cto')),
-                'type' => $this->input->post('rtype'),
-                'subject' => $this->input->post('tsubject'),
-                'category' => strtolower($this->category->get_name($this->input->post('ccategory'))),
-                'article_id' => $this->input->post('carticle'));
+                'email_to' => $reicipt,
+                'type' => $this->input->post('ctype'),
+                'subject' => $this->input->post('ttitle'),
+                'category' => $category,
+                'content' => $content,
+                'dates' => $this->input->post('tdates'));
             
 	    $this->Campaign_model->update($this->session->userdata('langid'), $campaign);
             $this->session->set_flashdata('message', "One $this->title has successfully updated!");
             
-            $this->session->unset_userdata('langid');
-            echo 'true|Data successfully saved..!';
 
         }
-        else{ echo 'error|'.validation_errors(); }
+        else{ $this->session->set_flashdata('message', validation_errors()); }
         }else { echo "error|Sorry, you do not have the right to edit $this->title component..!"; }
+        redirect($this->title.'/update/'.$this->session->userdata('langid'));
+        $this->session->unset_userdata('langid');
     }
     
-    function confirmation_process()
+    function confirmation($uid)
     {
        if ($this->acl->otentikasi_admin($this->title) == TRUE){
-
-        $data['title'] = $this->properti['name'].' | Campaignistrator  '.ucwords($this->modul['title']);
-        $data['h2title'] = $this->modul['title'];
-        $data['main_view'] = 'admin_update';
-	$data['form_action'] = site_url($this->title.'/update_process');
-	$data['link'] = array('link_back' => anchor('admin/','<span>back</span>', array('class' => 'back')));
-
-	// Form validation
-        $this->form_validation->set_rules('tcdates', 'Confirmation Date', 'required');
-        $this->form_validation->set_rules('cstts', 'Confirm Status', 'required');
-
-        if ($this->form_validation->run($this) == TRUE)
-        {
-            $type = $this->Campaign_model->get_by_id($this->session->userdata('langid'))->row();
+           
+            $stts = true;
+            $campaign = $this->Campaign_model->get_by_id($uid)->row();
             
-            if ($this->input->post('cstts') == 0){
-               $campaign = array(
-                'dates' => null,
-                'publish' => $this->input->post('cstts')); 
-                $stts = true;
+            if ($campaign->publish == 1){
+               $value = array('publish' => 0);
             }else{
-               $campaign = array(
-                'dates' => $this->input->post('tcdates'),
-                'publish' => $this->input->post('cstts')); 
+               $value = array('dates' => date('Y-m-d'), 'publish' => 1); 
                
                // sending campaign 
-               if ($type->type == 'email'){ $stts = $this->mail_campaign($this->session->userdata('langid')); }
-               elseif ($type->type == 'sms'){ /* sms campaign */ }
+               if ($campaign->type == 'email'){ $stts = $this->mail_campaign($uid); }
+               elseif ($campaign->type == 'sms'){ $stts = $this->mail_sms($uid); }
             }
             
             if ($stts == true){
-              $this->Campaign_model->update($this->session->userdata('langid'), $campaign);
+              $this->Campaign_model->update($uid, $value);
               $this->session->set_flashdata('message', "One $this->title has successfully updated!");
               
-              $this->session->unset_userdata('langid');
               echo 'true|Data Successfully Saved..!'; 
             }else { echo 'error|Sent Email Failed...!!'; }
 	    
         }
         else{ echo 'error|'.validation_errors(); }
-        }else { echo "error|Sorry, you do not have the right to edit $this->title component..!"; } 
     }
     
-    private function get_customer_type($val)
+    private function get_customer_type($val,$type='email')
     {
        $hasil = array();
        $i=0;
-       if ($val == 'customer'){ $result = $this->customer->get_cust_type('customer'); foreach ($result as $res) { $hasil[$i] = $res->email; $i++; } }
-       elseif ($val == 'member'){ $result = $this->customer->get_cust_type('member'); foreach ($result as $res) { $hasil[$i] = $res->email; $i++; } }       
-       elseif ($val == 'subscriber'){ $result = $this->subscriber->get(); foreach ($result as $res) { $hasil[$i] = $res->email; $i++; } }
+       if ($val == 'customer'){ $result = $this->customer->get_cust_type('customer'); 
+           foreach ($result as $res) {
+             if ($type == 'email'){ $hasil[$i] = $res->email;  }else{ $hasil[$i] = $res->phone1; } $i++; 
+           } 
+       }
+       elseif ($val == 'agent'){ $result = $this->agent->get_agent_type(); 
+           foreach ($result as $res) {
+              if ($type == 'email'){ $hasil[$i] = $res->email;  }else{ $hasil[$i] = $res->phone1; } $i++; 
+           } 
+       }
        return $hasil;
+    }
+    
+    private function mail_sms($pid)
+    {   
+        // property display
+       $data['p_logo'] = $this->properti['logo'];
+       $data['p_name'] = $this->properti['name'];
+       $data['p_site_name'] = $this->properti['sitename'];
+       $data['p_email'] = $this->properti['email'];
+
+       $campaign = $this->Campaign_model->get_by_id($pid)->row();
+       $res = explode(',', $campaign->email_to);
+       $val1 = array(); $val2 = array();
+       
+       if (count($res) == 1){ $val1 = $this->get_customer_type($res[0],'sms'); }
+       else if (count($res) == 2){ $val1 = $this->get_customer_type($res[0],'sms'); $val2 = $this->get_customer_type($res[1],'sms'); }
+       
+       $to = array_merge($val1,$val2);
+//       print_r(array_values($to));
+        
+       for ($i=0; $i<count($to); $i++){
+         $this->sms->send($to[$i], $campaign->content); 
+       }
+      return true; 
+//        if ($this->sms->send($to, $campaign->content) == true ){ return true; }else{ return false;  }
     }
     
     private function mail_campaign($pid)
@@ -363,25 +441,25 @@ class Campaign extends MX_Controller
        $data['p_logo'] = $this->properti['logo'];
        $data['p_name'] = $this->properti['name'];
        $data['p_site_name'] = $this->properti['sitename'];
+       $data['p_email'] = $this->properti['email'];
 
        $campaign = $this->Campaign_model->get_by_id($pid)->row();
        $res = explode(',', $campaign->email_to);
-       $val1 = array(); $val2 = array(); $val3 = array();
+       $val1 = array(); $val2 = array();
        
        if (count($res) == 1){ $val1 = $this->get_customer_type($res[0]); }
        else if (count($res) == 2){ $val1 = $this->get_customer_type($res[0]); $val2 = $this->get_customer_type($res[1]); }
-       else if (count($res) == 3){ $val1 = $this->get_customer_type($res[0]); $val2 = $this->get_customer_type($res[1]); $val3 = $this->get_customer_type($res[2]); }
        
-       $to = array_merge($val1,$val2,$val3);
+       $to = array_merge($val1,$val2);
 //       print_r(array_values($to));
        
-       $data['from'] = $campaign->email_from;
+       $data['from'] = $data['p_email'];
        $data['to'] = $campaign->email_to;
        $data['type'] = $campaign->type;
        $data['category'] = $campaign->category;
-       $data['article'] = $this->article->get_name($campaign->article_id);
+       $data['article'] = $campaign->subject;
        $data['dates'] = tglin($campaign->dates).' - '. timein($campaign->dates);
-       $data['content'] = $this->article->get_content($campaign->article_id);
+       $data['content'] = $campaign->content;
       
        $html = $this->load->view('campaign_invoice_email',$data,true);
 //       $html = $this->load->view('order_email',$data,true);
@@ -393,46 +471,17 @@ class Campaign extends MX_Controller
         $config['mailtype'] = 'html';
 
         $this->email->initialize($config);
-        $this->email->from($campaign->email_from, $data['p_name']);
+        $this->email->from($data['p_email'], $data['p_name']);
         $this->email->to($to);
         $this->email->cc($this->properti['cc_email']); 
 
         $this->email->subject($campaign->subject);
         $this->email->message($html);
 //        $pdfFilePath = FCPATH."/downloads/".$no.".pdf";
-//
+
         if (!$this->email->send()){ return false; }else{ return true;  }
-    }
-    
-    function mail_test()
-    {   
-        // property display
-       $data['p_logo'] = $this->properti['logo'];
-       $data['p_name'] = $this->properti['name'];
-       $data['p_site_name'] = $this->properti['sitename'];    
-      
-//       $html = $this->load->view('campaign_invoice_email',$data,true);
-       $html = $this->load->view('order_email',$data,true);
-        
-        // email send
-        $this->load->library('email');
-        $config['charset']  = 'utf-8';
-        $config['wordwrap'] = TRUE;
-        $config['mailtype'] = 'text';
-
-        $this->email->initialize($config);
-        $this->email->from('info@delicaindonesia.com', $data['p_name']);
-//        $this->email->to($to);
-        $this->email->to('sanjaya.kiran@gmail.com');
-        $this->email->cc($this->properti['cc_email']); 
-
-        $this->email->subject('Test Pesan');
-        $this->email->message($html);
-//        $pdfFilePath = FCPATH."/downloads/".$no.".pdf";
-//
-//        if (!$this->email->send()){ return false; echo 'tidak terkirim'; }else{ return true; echo 'terkirim';   }
-        $this->email->send();
-        echo $this->email->print_debugger();
+//        $this->email->send();
+//        echo $this->email->print_debugger();
     }
     
     function report_process()
@@ -485,9 +534,8 @@ class Campaign extends MX_Controller
             $data['type'] = $campaign->type;
             $data['category'] = $campaign->category;
             $data['subject'] = $campaign->subject;
-            $data['article'] = $this->article->get_name($campaign->article_id);
+            $data['content'] = $campaign->content;
             $data['dates'] = tglin($campaign->dates).' - '. timein($campaign->dates);
-            $data['content'] = $this->article->get_content($campaign->article_id);
 
             $this->load->view('campaign_invoice', $data);
         }
